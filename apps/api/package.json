@@ -6,7 +6,8 @@
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
     "typecheck": "tsc --noEmit -p tsconfig.json",
-    "test": "jest --config jest.config.ts --runInBand",
+    "test": "pnpm --filter @app/contracts run build && jest --config jest.config.ts --runInBand",
+    "test:docker": "pnpm --filter @app/contracts run build && node test/mongo-catalog.docker.mjs",
     "start": "node dist/main.js"
   },
   "dependencies": {
@@ -14,6 +15,7 @@
     "@nestjs/common": "^11.0.1",
     "@nestjs/core": "^11.0.1",
     "@nestjs/platform-express": "^11.0.1",
+    "mongodb": "^6.15.0",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1"
   },

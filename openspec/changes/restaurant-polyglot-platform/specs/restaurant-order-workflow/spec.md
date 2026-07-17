@@ -2,25 +2,25 @@
 
 ## Purpose
 
-Define guest ordering against the active restaurant catalog.
+Define guest ordering from the active catalog.
 
 ## Requirements
 
 ### Requirement: Guest Checkout Uses Catalog Snapshots
 
-Guest checkout MUST calculate totals server-side from active catalog prices, persist item snapshots, and ignore client totals.
+Guest checkout MUST price active items server-side, persist snapshots, and ignore client totals.
 
 #### Scenario: Server-calculated checkout
 
-- GIVEN an active priced catalog
-- WHEN a guest submits quantities and a forged total
-- THEN the order stores server snapshots and total
+- GIVEN active catalog items
+- WHEN a guest submits a forged total
+- THEN server-priced snapshots and total persist
 
 #### Scenario: Inactive or invalid item
 
-- GIVEN an invalid catalog item or quantity
-- WHEN checkout is submitted
-- THEN the system rejects it without an order
+- GIVEN invalid items or quantity
+- WHEN checkout submits
+- THEN it rejects without an order
 
 ### Requirement: Order State Transitions
 
@@ -28,28 +28,28 @@ Only `PENDING → CONFIRMED → PREPARING → READY → DISPATCHED → DELIVERED
 
 #### Scenario: Valid dispatch progression
 
-- GIVEN an order in a valid preceding state
+- GIVEN a permitted prior state
 - WHEN an operator advances it
-- THEN it reaches the next state
+- THEN the next state persists
 
 #### Scenario: Invalid transition
 
-- GIVEN an order state
-- WHEN an invalid transition is requested
-- THEN the system rejects it without state change
+- GIVEN any order state
+- WHEN an invalid transition submits
+- THEN it rejects without state change
 
 ### Requirement: Public and Operator Access
 
-Only catalog reads and guest checkout MUST be public. Configured-credential login MUST issue a short-lived, secure, HTTP-only cookie. Catalog mutations, order transitions, projection status/replay, and Cassandra reads MUST require an authenticated operator. Invalid credentials or unauthenticated requests MUST be rejected without mutation or operational-data disclosure. Local `mongosh`/`cqlsh` is classroom infrastructure, never public API behavior.
+Only catalog reads and checkout MUST be public. Configured login MUST issue a short-lived, secure, HTTP-only cookie. Mutations, transitions, status/replay, and Cassandra reads MUST require an authenticated operator. Invalid or absent sessions MUST mutate or disclose nothing. `mongosh`/`cqlsh` are classroom infrastructure, never public API.
 
 #### Scenario: Authenticated operator access
 
-- GIVEN valid configured credentials
-- WHEN the operator logs in and invokes a protected operation
-- THEN it receives the cookie and succeeds
+- GIVEN configured credentials
+- WHEN an operator logs in
+- THEN its cookie permits protected work
 
 #### Scenario: Unauthenticated or invalid access
 
 - GIVEN invalid credentials or no session
-- WHEN a protected or Cassandra read request arrives
-- THEN it rejects without mutation or operational-data disclosure
+- WHEN protected work is requested
+- THEN it rejects without mutation or data

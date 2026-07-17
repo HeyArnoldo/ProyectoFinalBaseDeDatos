@@ -33,6 +33,8 @@ services:
     mem_limit: 384m
     environment:
       API_PORT: "3000"
+      MONGODB_URI: mongodb://mongodb:27017/?replicaSet=rs0
+      MONGODB_DATABASE: restaurant
     depends_on:
       mongodb:
         condition: service_healthy

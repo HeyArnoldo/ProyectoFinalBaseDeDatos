@@ -32,12 +32,14 @@ Chain strategy: N/A — local-only; decide before future Git delivery
 ## Phase 1: Tooling and Local Runtime
 
 - [x] 1.1 **Unit 1:** Create `package.json`, `pnpm-workspace.yaml`, `packages/tsconfig/strict.json`, `packages/contracts/src/index.ts`, and `apps/api/{package.json,jest.config.ts,src/{main,app.module,health/health.controller}.ts,test/health.e2e-spec.ts}`; make Jest/Supertest health RED then GREEN. Update `openspec/config.yaml` and Engram testing capabilities to strict TDD.
-- [ ] 1.2 **Unit 2 (RED→GREEN→REFACTOR):** Add `apps/{api,web}/Dockerfile`, `apps/web/{package.json,src/main.tsx,nginx.conf}`, `infra/{compose.yaml,mongodb/healthcheck.js}`; test **Healthy deterministic startup** and **Database delay and restart** with named volumes, internal databases, and limits.
-  - Implementation and static validation pass; full Docker validation is pending because the local Docker daemon became unavailable after a read-only containerd metadata error.
+- [x] 1.2 **Unit 2 (RED→GREEN→REFACTOR):** Add `apps/{api,web}/Dockerfile`, `apps/web/{package.json,src/main.tsx,nginx.conf}`, `infra/{compose.yaml,mongodb/healthcheck.js}`; test **Healthy deterministic startup** and **Database delay and restart** with named volumes, internal databases, and limits.
+  - Full Docker build, health-gated startup, database queries, restart persistence, resource capture, and volume-preserving shutdown verified.
 
 ## Phase 2: MongoDB Catalog and Checkout
 
-- [ ] 2.1 **Unit 3 (RED→GREEN→REFACTOR):** Test then implement `apps/api/src/database/{mongo.provider,bootstrap.service,seed.service}.ts` and `catalog/{catalog.controller,catalog.service}.ts`; add validators/indexes, active seed, and cover **Valid schema bootstrap** and **Invalid or duplicate write**.
+- [x] 2.1 **Unit 3 (RED→GREEN→REFACTOR):** Test then implement `apps/api/src/database/{mongo.provider,bootstrap.service,seed.service}.ts` and `catalog/{catalog.controller,catalog.service}.ts`; add validators/indexes, active seed, and cover **Valid schema bootstrap** and **Invalid or duplicate write**.
+  - Verified native Mongo lifecycle, strict validators, named indexes, invalid/duplicate rejection, deterministic reseeding, and public active-only catalog reads through the four-container stack.
+  - Audit remediation verified canonical lowercase UUIDv4 validators, fail-fast Mongo configuration, shared Zod response parsing, exact index and `$setOnInsert` assertions, client shutdown, and automated Docker black-box enforcement.
 - [ ] 2.2 **Unit 4 (RED→GREEN→REFACTOR):** Test then implement `orders/{checkout.service,orders.controller,order.types}.ts` and contract schemas; transactionally store snapshots/order/outbox and cover **Server-calculated checkout**, **Inactive or invalid item**, **Atomic idempotent checkout**, and **Aborted transaction**.
 
 ## Phase 3: Operator and Projection Workflows

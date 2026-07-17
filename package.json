@@ -10,7 +10,8 @@
   "scripts": {
     "build": "pnpm -r run build",
     "typecheck": "pnpm -r run typecheck",
-    "test": "pnpm --filter @app/api run test"
+    "test": "pnpm --filter @app/api run test",
+    "test:docker": "pnpm --filter @app/api run test:docker"
   },
   "devDependencies": {
     "typescript": "~5.9.3"

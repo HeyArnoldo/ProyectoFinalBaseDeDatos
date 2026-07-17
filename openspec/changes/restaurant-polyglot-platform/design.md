@@ -2,89 +2,88 @@
 
 ## Technical Approach
 
-The repository intentionally has no application or test conventions. These are **adopted template patterns**, verified through Graphify then source reads, not existing project patterns: pnpm workspaces, Nest modules, shared Zod validation, cookie JWT guards, React Router/Query/Axios, and multi-stage Node/nginx images. TypeORM, PostgreSQL, Google auth, and registration are excluded.
+The current pnpm workspace has a minimal React/Vite shell, nginx API proxy, shared catalog Zod schema, native Mongo bootstrap, three-item seed, and active-only catalog query. Extend these actual patterns. React 19.2.7 supplies lazy/Suspense and transitions; Tailwind v4 uses `@tailwindcss/vite` plus CSS-first `@theme`; Vite 7.3.1 emits static hashed assets and lazy chunks. Only explicit `VITE_API_BASE_URL` is client-visible; never secrets.
 
 ## Architecture Decisions
 
 | Option | Tradeoff | Decision |
 |---|---|---|
-| Native `mongodb` / Mongoose | Less Nest sugar / direct transactions, validators, indexes, explain | Native driver behind provider tokens avoids ODM translation. |
-| Apache `cassandra-driver` / ORM | Manual CQL / prepared UUID/date binding | The npm package and options are verified against official `/apache/cassandra-nodejs-driver` docs; no ORM is justified. |
-| UUID / `ObjectId` | Larger Mongo keys / cross-store identity | Generate canonical UUIDv4 strings; bind with `types.Uuid.fromString`. |
-| Embedded poller / broker | Single-instance throughput / no extra service | Lease inside API; no Kafka or fifth container. |
-| Static operator / users collection | One operator / smallest write protection | `OPERATOR_PASSWORD_HASH` plus a 15-minute HS256 cookie (`HttpOnly; Secure; SameSite=Strict; Path=/`) reuse the template guard; no refresh or registration. |
+| Native `mongodb` / Mongoose | Less Nest sugar / direct controls | Keep native transactions, validators, indexes, and explain. |
+| `cassandra-driver` / ORM | Manual CQL / exact access | Keep the officially verified npm driver with `{prepare:true,isIdempotent:true}`. |
+| UUID / `ObjectId` | Larger keys / cross-store identity | Keep canonical UUIDv4 strings and `types.Uuid.fromString`. |
+| Embedded poller / broker | Single instance / bounded topology | Keep the leased API poller; no Kafka or worker service. |
+| Static operator / users | One operator / minimal surface | Keep bcrypt credentials and 15-minute HS256 cookie (`HttpOnly; Secure; SameSite=Strict; Path=/`), without registration/refresh. |
 
 ## Data Flow
 
 ```text
-Browser -> nginx web -> Nest API -> MongoDB replica set
-                              ^          | order + outbox transaction
-                              `- poller -+-> Cassandra two-view projection
+Browser -> nginx/static web -> Nest API -> MongoDB order + outbox
+                                      `-> embedded poller -> Cassandra views
 ```
 
-## Storage and Contracts
+## Operational Persistence
 
-Bootstrap creates or `collMod`s strict `$jsonSchema` validators (`validationAction:error`; required fields; no extras): UUIDs are canonical strings, money/quantities BSON integers, timestamps dates, flags booleans, and nested shapes exact. Named indexes are:
+Strict Mongo `$jsonSchema` still enforces UUID strings, BSON integer money/quantities, dates, booleans, and exact required shapes. Extend `catalog_items` with required `category`/`description` and optional nullable `imageUrl`; retain unique `uq_catalog_restaurant_sku`. `orders` keeps guest/snapshots/total/status/history/idempotency with `uq_orders_idempotency` and `ix_orders_restaurant_createdAt`. `outbox` keeps event/payload/lease/retry/result with `uq_outbox_eventId` and `ix_outbox_claim`.
 
-| Mongo collection | Boundary | Indexes |
-|---|---|---|
-| `catalog_items` | `_id`, `restaurantId`, `sku`, `name`, `priceCents:int>=0`, `active`, timestamps | unique `uq_catalog_restaurant_sku` `{restaurantId:1,sku:1}` |
-| `orders` | `guest:{name,phone,address}`; snapshots `{catalogItemId,sku,name,unitPriceCents,quantity,lineTotalCents}`; `totalCents:int`; status `PENDING|CONFIRMED|PREPARING|READY|DISPATCHED|DELIVERED|CANCELLED`; history `{eventId,status,at}`; idempotency/hash/timestamps | unique `uq_orders_idempotency`; `ix_orders_restaurant_createdAt` `{restaurantId:1,createdAt:-1}` |
-| `outbox` | IDs; type `ORDER_CREATED|ORDER_STATUS_CHANGED`; payload `{status,totalCents}`; occurrence; status `PENDING|PROCESSING|PROCESSED`; attempts; dated lease/retry/result; nullable error | unique `uq_outbox_eventId`; `ix_outbox_claim` `{processedAt:1,nextAttemptAt:1,leaseUntil:1,createdAt:1}` |
-
-Checkout precomputes IDs/time/hash; `withTransaction` inserts order and event with majority writes and reuses those values on callback retry. Duplicate idempotency returns the original; a different hash returns 409. Transitions filter current status and transactionally update history plus outbox; races change nothing.
+Checkout precomputes IDs/time/hash and transactionally inserts order/outbox with majority writes. Retries reuse values; matching duplicates return the original, hash mismatch returns 409. Transitions atomically filter state, append history, and emit outbox.
 
 ```cql
 CREATE KEYSPACE IF NOT EXISTS restaurant_projection
- WITH replication = {'class':'NetworkTopologyStrategy','datacenter1':1};
-USE restaurant_projection;
-CREATE TABLE IF NOT EXISTS order_timeline_by_order (
+ WITH replication={'class':'NetworkTopologyStrategy','datacenter1':1};
+CREATE TABLE IF NOT EXISTS restaurant_projection.order_timeline_by_order (
  order_id uuid, occurred_at timestamp, event_id uuid, restaurant_id uuid,
  event_type text, order_status text, total_cents int,
- PRIMARY KEY ((order_id), occurred_at, event_id)
-) WITH CLUSTERING ORDER BY (occurred_at ASC, event_id ASC);
-CREATE TABLE IF NOT EXISTS restaurant_activity_by_day (
+ PRIMARY KEY ((order_id),occurred_at,event_id)
+) WITH CLUSTERING ORDER BY (occurred_at ASC,event_id ASC);
+CREATE TABLE IF NOT EXISTS restaurant_projection.restaurant_activity_by_day (
  restaurant_id uuid, day date, occurred_at timestamp, event_id uuid, order_id uuid,
  event_type text, order_status text, total_cents int,
- PRIMARY KEY ((restaurant_id, day), occurred_at, event_id)
-) WITH CLUSTERING ORDER BY (occurred_at DESC, event_id ASC);
+ PRIMARY KEY ((restaurant_id,day),occurred_at,event_id)
+) WITH CLUSTERING ORDER BY (occurred_at DESC,event_id ASC);
 ```
 
-Prepared reads require `order_id=?` or `(restaurant_id=?,day=?)`; `ALLOW FILTERING` is never issued.
+Keep the 2-second poll, 30-second lease, capped retry, replay, lag/state reporting, and idempotent upserts. Public API remains active catalog plus checkout. Operator session protects mutations, transitions, status/replay, and both exact-partition reads; never `ALLOW FILTERING`.
 
-## Polling, Interfaces, and Evidence
+## Frontend Experience
 
-Every 2s, the poller leases the oldest eligible event for 30s, upserts both tables, then conditionally marks it processed. Failure releases it and retries indefinitely after `min(2^attempts,60s)`. Crashes replay identical keys. Protected status returns counts, oldest lag, attempts, and last error; replay resets selected events.
+**Visual direction:** contemporary Peruvian brasa editorial, not generic SaaS cards. Warm cream, charcoal, ember, saffron, and herb `@theme` tokens; strong locally served display/body variable fonts; food-led asymmetry, generous type, dividers, and semantic state color. All UI copy is neutral Spanish.
 
-Public API: catalog reads and `POST /api/orders` (`Idempotency-Key`) only. Credential login returns the operator cookie or a generic 401. Catalog mutations, order transitions, projection status/replay, and both Cassandra partition reads require that session; unauthenticated requests return 401 before data access.
+| Route | Composition |
+|---|---|
+| `/` | `CatalogPage`: hero, `CategoryFilter`, `ProductGrid/ProductTile`, `CartDrawer`. |
+| `/checkout` | Labeled guest form, summary, loading/error submission. |
+| `/confirmacion/:orderId` | UUID, authoritative total, pending projection state from checkout response; no public projection read. |
+| `/operador/login` | Credential form and unauthorized/expired state. |
+| `/operador/*` | Lazy `OperatorLayout`; `OrdersBoard` transitions and `ProjectionBoard` lag/replay/two reads. |
 
-`evidence/run.mjs` uses fixed UUIDs/dates/keys. It emits sorted aggregation totals and the stable index-name/count subset of `find({restaurantId,createdAt range}).sort(...).hint('ix_orders_restaurant_createdAt').explain('executionStats')`, excluding timings, plus both prepared CQL partition queries.
+TanStack Query owns server state; `CartProvider` is a small reducer/context. React Hook Form resolves shared Zod checkout/login schemas. `startTransition` wraps category and non-urgent board filters; avoid manual memoization without measurement. Suspense wraps only the lazy operator subtree. Tailwind responsive, `focus-visible`, and `motion-reduce` variants cover keyboard navigation, WCAG-AA contrast, landmarks, and loading/empty/offline/error/success/unauthorized states. A small `components/ui` layer provides buttons, fields, notices, and badges.
+
+Seed about 12 neutral-Spanish products across brasa, combos, guarniciones, and bebidas, including inactive rows; API remains active-only. Optional local `/images/*.webp` URLs use dimensions, `loading="lazy"`, async decoding, and deterministic fallback artwork on null/error.
 
 ## File Changes
 
 | File | Action | Description |
 |---|---|---|
-| `package.json`, `pnpm-workspace.yaml`, `packages/{tsconfig,contracts}/**` | Create | Workspace and contracts. |
-| `apps/api/src/{database,catalog,orders,auth,projections,health}/**` | Create | Nest clients, bootstrap, workflows, poller. |
-| `apps/web/src/{pages,hooks,services,lib}/**` | Create | Guest/operator web. |
-| `apps/{api,web}/Dockerfile`, `apps/web/nginx.conf` | Create | Images and API proxy. |
-| `infra/compose.yaml`, `infra/mongodb/healthcheck.js` | Create | Runtime and replica-set initialization. |
-| `apps/api/{jest.config.ts,test/**}`, `**/*.spec.ts` | Create | Unit/integration/E2E foundation. |
-| `evidence/run.mjs` | Create | Deterministic evidence. |
+| `apps/web/package.json`, `vite.config.ts`, `src/main.tsx` | Modify/Create | Pin React 19.2.7/Vite 7.3.1; add Query, RHF, Tailwind v4, Vitest, providers. |
+| `apps/web/src/app/{router,providers}.tsx`, `layouts/**` | Create | Public/lazy operator routes. |
+| `apps/web/src/features/{catalog,cart,checkout,auth,operator}/**` | Create | Pages, queries, reducer, forms, boards. |
+| `apps/web/src/{styles.css,components/ui/**}`, `public/images/**` | Create | Tokens, primitives, optimized assets/fallback. |
+| `packages/contracts/src/{catalog,checkout,auth,operator}.ts`, `index.ts` | Create/Modify | Shared Zod contracts. |
+| `apps/api/src/database/{bootstrap,seed}.service.ts`, `catalog/catalog.service.ts` | Modify | Fields, ~12-item seed, categorized active sorting. |
+| `apps/web/{Dockerfile,nginx.conf}` | Modify | Build contracts; cache hashes; retain SPA/proxy. |
+| `apps/web/{vitest.config.ts,playwright.config.ts,src/test/**}`, `evidence/ui/**` | Create | UI tests/evidence. |
 
 ## Testing Strategy
 
 | Layer | Approach |
 |---|---|
-| Unit | Jest: totals, transitions, auth, claim/backoff with fakes. |
-| Integration | Jest on Compose network: validators/indexes, abort/idempotency, prepared replay. |
-| E2E | `@nestjs/testing` + Supertest: public boundary, auth, transitions, status, protected partition reads. |
-
-Tooling is slice one; strict TDD can then be enabled.
+| UI TDD | Vitest + Testing Library/user-event: cart, filters, forms, states, routing, fallback. |
+| API | Existing Jest/Supertest: validator, active-only, checkout, auth/projection boundaries. |
+| Final flow | Playwright only for responsive checkout and keyboard/reduced-motion/unauthorized evidence; no service/container. |
 
 ## Migration / Rollout
 
-No migration. API entrypoint idempotently bootstraps schemas and fixed seed. Compose health-gates Mongo replica-set primary, Cassandra, API, then web. Exactly four persistent services run: web 96 MiB, API+poller 384 MiB, MongoDB 1536 MiB, Cassandra 3072 MiB. Only web publishes a port; databases use an internal network and named `mongodb_data`/`cassandra_data` volumes. Classroom inspection remains available with `docker compose exec mongodb mongosh` and `docker compose exec cassandra cqlsh`. Images are multi-stage; all services use restart policies and `json-file` rotation (`10m`, three files).
+Bootstrap applies `collMod`, then replaces fixed seed IDs with complete documents (not current `$setOnInsert`), upgrading the existing three rows before readiness. Static/lazy Vite output and optimized assets keep nginx within 96 MiB. The four services, limits, private databases, volumes, health gates, logging, and `docker compose exec` shells remain unchanged; no persistent service is added.
 
 ## Open Questions
 

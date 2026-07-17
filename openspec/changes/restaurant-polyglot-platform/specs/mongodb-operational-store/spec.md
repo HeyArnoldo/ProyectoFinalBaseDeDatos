@@ -2,44 +2,44 @@
 
 ## Purpose
 
-Define MongoDB as the validated operational source of truth.
+Define MongoDB operational truth.
 
 ## Requirements
 
 ### Requirement: Validated and Indexed Operational Records
 
-MongoDB MUST validate required typed fields for `catalog_items`, `orders`, and `outbox`. It MUST enforce unique `(restaurantId, sku)`, `idempotencyKey`, and `eventId` indexes plus compound `(restaurantId, createdAt)` indexing.
+MongoDB MUST validate typed required fields in `catalog_items`, `orders`, and `outbox`; enforce unique `(restaurantId,sku)`, `idempotencyKey`, `eventId`, and compound `(restaurantId,createdAt)` indexes.
 
 #### Scenario: Valid schema bootstrap
 
 - GIVEN valid documents
 - WHEN bootstrap runs
-- THEN validators and required indexes exist
+- THEN validators and indexes exist
 
 #### Scenario: Invalid or duplicate write
 
-- GIVEN an invalid or duplicate direct write
-- WHEN it is submitted
-- THEN enforcement rejects it without a record
+- GIVEN invalid or duplicate writes
+- WHEN submitted directly
+- THEN enforcement rejects them without records
 
 ### Requirement: Atomic Checkout and Reproducible Evidence
 
-Checkout MUST commit one order and its outbox event in one transaction. Repeated idempotency keys MUST return the original result. Deterministic seed data MUST reproduce aggregation and `explain("executionStats")` evidence identifying the selected index.
+Checkout MUST transactionally write one order/outbox event; repeated keys MUST return the original. Deterministic seed MUST reproduce aggregation and `explain("executionStats")` evidence naming its index.
 
 #### Scenario: Atomic idempotent checkout
 
-- GIVEN a valid checkout key
-- WHEN checkout is retried
-- THEN one order/event and the same response exist
+- GIVEN a checkout key
+- WHEN checkout retries
+- THEN one order/outbox and response exist
 
 #### Scenario: Aborted transaction
 
-- GIVEN a forced transaction failure
+- GIVEN transaction failure
 - WHEN it aborts
-- THEN neither order nor outbox exists
+- THEN no order/outbox exists
 
 #### Scenario: Repeatable query evidence
 
-- GIVEN the deterministic seed
+- GIVEN deterministic seed
 - WHEN evidence runs twice
-- THEN matching artifacts name a required index
+- THEN matching artifacts name its index

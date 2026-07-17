@@ -1,0 +1,119 @@
+services:
+  web:
+    build:
+      context: ..
+      dockerfile: apps/web/Dockerfile
+    mem_limit: 96m
+    ports:
+      - "8080:80"
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1/health"]
+      interval: 10s
+      timeout: 5s
+      start_period: 5s
+      retries: 12
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+    networks:
+      platform:
+        aliases:
+          - web
+
+  api:
+    build:
+      context: ..
+      dockerfile: apps/api/Dockerfile
+    mem_limit: 384m
+    environment:
+      API_PORT: "3000"
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      cassandra:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3000/health"]
+      interval: 10s
+      timeout: 5s
+      start_period: 10s
+      retries: 12
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+    networks:
+      platform:
+        aliases:
+          - api
+
+  mongodb:
+    image: mongo:8.0
+    command: ["mongod", "--replSet", "rs0", "--bind_ip_all", "--wiredTigerCacheSizeGB", "0.5"]
+    mem_limit: 1536m
+    volumes:
+      - mongodb_data:/data/db
+      - ./mongodb/healthcheck.js:/healthcheck.js:ro
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "mongodb://127.0.0.1:27017/admin", "/healthcheck.js"]
+      interval: 5s
+      timeout: 5s
+      start_period: 10s
+      retries: 30
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+    networks:
+      platform:
+        aliases:
+          - mongodb
+
+  cassandra:
+    image: cassandra:5.0
+    environment:
+      CASSANDRA_CLUSTER_NAME: restaurant-projection
+      CASSANDRA_NUM_TOKENS: "16"
+      MAX_HEAP_SIZE: 1536M
+      HEAP_NEWSIZE: 512M
+    mem_limit: 3072m
+    volumes:
+      - cassandra_data:/var/lib/cassandra
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - >-
+          cqlsh --request-timeout 5 127.0.0.1 9042
+          -e "SELECT release_version FROM system.local;"
+          >/dev/null 2>&1
+      interval: 10s
+      timeout: 10s
+      start_period: 60s
+      retries: 30
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+    networks:
+      platform:
+        aliases:
+          - cassandra
+
+volumes:
+  mongodb_data:
+  cassandra_data:
+
+networks:
+  platform:

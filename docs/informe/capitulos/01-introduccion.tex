@@ -1,0 +1,58 @@
+\chapter{Introducción}
+\label{chap:introduccion}
+
+\section{Contexto del proyecto}
+
+La gestión de pedidos de un restaurante combina operaciones con necesidades diferentes. El catálogo y el pedido requieren validación estricta, control de concurrencia y consistencia inmediata; la línea temporal de un pedido y la actividad diaria del restaurante, en cambio, se consultan naturalmente como secuencias de eventos. Modelar ambas necesidades mediante el mismo esquema puede ocultar los compromisos de diseño de cada consulta. El proyecto propone estudiar esta separación mediante dos tecnologías NoSQL con responsabilidades acotadas.
+
+La aplicación universitaria tiene un alcance local: el cliente consulta un catálogo activo y realiza un pedido como invitado; un operador administra el catálogo, controla el flujo del pedido y consulta las proyecciones de actividad. MongoDB conserva el estado operacional y Cassandra mantiene vistas derivadas. La solución se ejecuta con Docker Compose en cuatro contenedores persistentes y con un presupuesto aproximado de \(5\)~GiB de memoria \parencite{proyectoOpenSpec}.
+
+\section{Planteamiento del problema}
+
+El problema técnico no consiste solamente en almacenar pedidos. La solución debe conservar simultáneamente las siguientes propiedades:
+
+\begin{itemize}
+  \item impedir que el cliente altere precios o totales;
+  \item registrar un pedido y el evento que lo anuncia como una única decisión atómica;
+  \item aceptar reintentos sin duplicar pedidos ni eventos lógicos;
+  \item restringir el flujo a transiciones de estado válidas;
+  \item responder consultas temporales de Cassandra mediante sus claves de partición, sin filtrado global;
+  \item recuperarse de una interrupción de Cassandra sin perder el estado operacional de MongoDB; y
+  \item producir evidencia repetible de validadores, índices, transacciones, planes de consulta y proyecciones.
+\end{itemize}
+
+La pregunta orientadora es: \emph{¿cómo diseñar y verificar una plataforma de pedidos que use MongoDB y Cassandra con responsabilidades complementarias, manteniendo integridad operacional y proyecciones recuperables dentro de un entorno académico limitado?}
+
+\section{Justificación}
+
+La persistencia políglota solo resulta defendible cuando cada almacén resuelve un patrón concreto y el costo de coordinación se hace explícito \parencite{sadalage2012,kleppmann2017}. Por esta razón, el diseño evita duplicar operaciones CRUD en dos motores. MongoDB se selecciona para documentos operacionales validados y transacciones; Cassandra se limita a tablas desnormalizadas definidas por las consultas. Esta delimitación permite evaluar conceptos centrales del curso: modelado documental, índices, agregaciones, transacciones, particionamiento, orden de agrupación y consistencia eventual.
+
+La contribución académica del proyecto es doble. En primer lugar, entrega una aplicación funcional con decisiones de datos justificadas. En segundo lugar, genera un conjunto determinista de evidencias para que otra persona pueda repetir las pruebas y contrastar los resultados.
+
+\section{Objetivos}
+
+\subsection{Objetivo general}
+
+Diseñar, implementar y evaluar una plataforma local de gestión de pedidos para un restaurante que combine MongoDB como almacén operacional y Cassandra como almacén de proyecciones, garantizando integridad, idempotencia, trazabilidad y recuperación verificable ante fallos.
+
+\subsection{Objetivos específicos}
+
+\begin{enumerate}
+  \item Modelar y validar en MongoDB el catálogo, los pedidos y la salida de eventos.
+  \item Implementar el cálculo de totales en el servidor y el registro atómico del pedido con su evento.
+  \item Diseñar dos tablas Cassandra a partir de las consultas de línea temporal y actividad diaria.
+  \item Proyectar eventos de manera idempotente mediante un trabajador con reintentos y observabilidad.
+  \item Proteger las operaciones administrativas mediante autenticación y autorización.
+  \item Desplegar la solución en un entorno reproducible de cuatro contenedores con límites de recursos.
+  \item Recopilar evidencia determinista sobre integridad, rendimiento de consultas y recuperación.
+\end{enumerate}
+
+\section{Alcance y exclusiones}
+
+El alcance incluye catálogo, compra como invitado, cálculo de totales, estados del pedido, despacho, autenticación de un operador, salida transaccional y dos proyecciones Cassandra. También incluye validadores, índices, agregaciones, análisis con \code{explain("executionStats")}, datos semilla y pruebas automatizadas.
+
+Quedan fuera del proyecto pagos, cupones, reseñas, mensajería por WhatsApp, alta disponibilidad, despliegue productivo, sincronización bidireccional y servicios adicionales como PostgreSQL, Redis o Kafka. Estas exclusiones mantienen el experimento dentro del presupuesto de recursos y evitan atribuir al prototipo propiedades que no demuestra.
+
+\section{Organización del informe}
+
+El capítulo~\ref{chap:fundamentos} desarrolla el marco conceptual. El capítulo~\ref{chap:metodologia} describe la metodología y los requisitos. Los capítulos~\ref{chap:arquitectura} y~\ref{chap:datos} presentan la arquitectura y los modelos de datos. El capítulo~\ref{chap:validacion} explica cómo se obtiene la evidencia. Finalmente, el capítulo~\ref{chap:plan} analiza la implementación, los riesgos y las limitaciones, antes de formular las conclusiones.

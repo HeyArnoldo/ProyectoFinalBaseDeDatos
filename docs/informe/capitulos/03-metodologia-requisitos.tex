@@ -1,0 +1,86 @@
+\chapter{Metodología y especificación de requisitos}
+\label{chap:metodologia}
+
+\section{Enfoque metodológico}
+
+El desarrollo siguió un enfoque guiado por especificaciones. La propuesta delimitó el problema; las especificaciones expresaron comportamiento observable; el diseño documentó decisiones y compromisos; las tareas dividieron la construcción en unidades verificables. Los términos \emph{debe}, \emph{deberá} y \emph{puede} se interpretan como niveles normativos siguiendo la convención de \textcite{rfc2119}.
+
+El proceso se organizó en cinco fases:
+
+\begin{enumerate}
+  \item \textbf{Especificación:} convertir necesidades en requisitos identificables y escenarios Dado--Cuando--Entonces.
+  \item \textbf{Diseño:} relacionar cada requisito con componentes, modelos de datos y decisiones de consistencia.
+  \item \textbf{Implementación incremental:} se estableció primero la infraestructura de pruebas y se construyeron cortes verticales pequeños.
+  \item \textbf{Verificación:} se ejecutaron pruebas automatizadas y experimentos reproducibles contra criterios de aceptación.
+  \item \textbf{Documentación de resultados:} se definieron comandos, salidas estables, capturas pertinentes y análisis de desviaciones.
+\end{enumerate}
+
+OpenSpec constituye la línea base del proyecto a la fecha de este informe \parencite{proyectoOpenSpec}. Si la implementación exige modificar un requisito, el cambio deberá actualizar primero esa línea base y luego la matriz de trazabilidad del apéndice~\ref{app:trazabilidad}.
+
+\section{Actores}
+
+\begin{table}[H]
+  \centering
+  \caption{Actores y responsabilidades}
+  \label{tab:actores}
+  \begin{tabularx}{\textwidth}{@{}p{3cm}YY@{}}
+    \toprule
+    \textbf{Actor} & \textbf{Objetivo} & \textbf{Permisos} \\
+    \midrule
+    Invitado & Consultar el catálogo y registrar un pedido & Lectura de catálogo activo y creación de pedidos \\
+    Operador & Administrar la operación del restaurante & Inicio de sesión, catálogo, estados, proyecciones y reproducción \\
+    Trabajador & Materializar eventos pendientes & Reclamo de salida, escritura idempotente y actualización de estado \\
+    Evaluador & Comprobar las propiedades técnicas & Ejecución local de semillas, pruebas y consultas de evidencia \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+\section{Requisitos funcionales}
+
+\begin{longtable}{@{}p{1.4cm}p{4cm}p{8.2cm}@{}}
+  \caption{Requisitos funcionales}\label{tab:rf}\\
+  \toprule
+  \textbf{ID} & \textbf{Nombre} & \textbf{Criterio verificable} \\
+  \midrule
+  \endfirsthead
+  \toprule
+  \textbf{ID} & \textbf{Nombre} & \textbf{Criterio verificable} \\
+  \midrule
+  \endhead
+  RF-01 & Catálogo público & El invitado consulta únicamente artículos activos con sus precios vigentes. \\
+  RF-02 & Compra calculada & La API obtiene precios del catálogo, valida cantidades, persiste instantáneas y descarta totales enviados por el cliente. \\
+  RF-03 & Idempotencia de compra & La repetición de una clave con el mismo contenido devuelve el pedido original; con contenido distinto responde conflicto. \\
+  RF-04 & Flujo de estados & Solo se permiten las transiciones definidas en la figura~\ref{fig:estados}. \\
+  RF-05 & Acceso del operador & Las mutaciones administrativas y las consultas operacionales requieren una sesión válida. \\
+  RF-06 & Proyección de eventos & Cada evento de salida se aplica a las dos vistas Cassandra y después se marca como procesado. \\
+  RF-07 & Consultas particionadas & La línea temporal usa el pedido y la actividad diaria usa restaurante y fecha como claves de partición. \\
+  RF-08 & Recuperación & El operador consulta retraso, errores e intentos, y puede solicitar la reproducción de eventos seleccionados. \\
+  \bottomrule
+\end{longtable}
+
+\section{Requisitos no funcionales}
+
+\begin{longtable}{@{}p{1.4cm}p{3.6cm}p{8.6cm}@{}}
+  \caption{Requisitos no funcionales}\label{tab:rnf}\\
+  \toprule
+  \textbf{ID} & \textbf{Atributo} & \textbf{Criterio verificable} \\
+  \midrule
+  \endfirsthead
+  \toprule
+  \textbf{ID} & \textbf{Atributo} & \textbf{Criterio verificable} \\
+  \midrule
+  \endhead
+  RNF-01 & Integridad & Los validadores e índices rechazan tipos inválidos y duplicados aun ante escritura directa. \\
+  RNF-02 & Atomicidad & Una falla forzada en la compra no deja ni pedido ni evento de salida. \\
+  RNF-03 & Idempotencia & Los reintentos no generan más de un pedido ni más de un evento lógico por vista. \\
+  RNF-04 & Observabilidad & El estado de proyección expone cantidades, retraso más antiguo, intentos y último error. \\
+  RNF-05 & Reproducibilidad & Una semilla fija produce agregaciones y evidencia estructural equivalentes en ejecuciones sucesivas. \\
+  RNF-06 & Seguridad & Las credenciales no se almacenan en el código; la cookie JWT dura 15 minutos y usa \code{HttpOnly}, \code{Secure}, \code{SameSite=Strict} y \code{Path=/}. \\
+  RNF-07 & Recursos & Los cuatro servicios están configurados con límites de 96, 384, 1536 y 3072~MiB, para un total de 5088~MiB. \\
+  RNF-08 & Persistencia local & Los datos de ambos motores sobreviven al reinicio de sus contenedores mediante volúmenes con nombre. \\
+  \bottomrule
+\end{longtable}
+
+\section{Criterios globales de éxito}
+
+La evaluación se considera satisfactoria cuando: (a) el entorno inicia de forma determinista con cuatro servicios; (b) la compra confirma atómicamente un pedido y su evento; (c) la evidencia identifica validadores, índices y planes requeridos; y (d) las dos vistas Cassandra convergen después de duplicados e interrupciones. Estos criterios no sustituyen las pruebas detalladas del capítulo~\ref{chap:validacion}; funcionan como condiciones de salida del proyecto.

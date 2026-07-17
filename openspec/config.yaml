@@ -1,0 +1,50 @@
+schema: spec-driven
+
+context: |
+  Detected implementation: no application source or build manifests.
+  Detected architecture, style, and test tooling: none established.
+  Repository content: grading-rubric image and Git text-normalization attributes.
+
+intent:
+  implementation_status: planned—not detected
+  target_stack: React/Vite web; NestJS API with embedded outbox worker; MongoDB; minimal Cassandra event views; Docker Compose
+  runtime_target: approximately 5 GB for the experimental local profile
+
+strict_tdd: true
+
+testing:
+  detected_at: 2026-07-17
+  test_runner: { available: true, framework: "Jest 30 + Supertest", command: "pnpm test" }
+  layers:
+    unit: { available: false, tool: null }
+    integration: { available: false, tool: null }
+    e2e: { available: true, tool: "Jest 30 + Supertest" }
+  coverage: { available: false, command: null }
+  quality:
+    linter: { available: false, command: null }
+    type_checker: { available: true, command: "pnpm typecheck" }
+    formatter: { available: false, command: null }
+
+delivery:
+  strategy: ask-always
+  local_first: true
+  review_budget_lines: 400
+  git_operations: prohibited-in-this-session
+
+rules:
+  proposal:
+    - Include rollback plan for risky changes.
+    - Identify affected modules and packages.
+  specs:
+    - Use Given/When/Then scenarios and RFC 2119 keywords.
+  design:
+    - Document rationale and sequence diagrams for complex flows.
+  tasks:
+    - Group small tasks by phase using hierarchical numbering.
+  apply:
+    - Do not import TemplateFullStack during bootstrap or implementation without an approved change.
+    - Use Jest/Supertest RED-GREEN-REFACTOR for implementation slices.
+  verify:
+    - Run only available validation commands and compare every spec scenario.
+  archive:
+    - Warn before merging destructive deltas.

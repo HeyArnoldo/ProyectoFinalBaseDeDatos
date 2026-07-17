@@ -1,0 +1,180 @@
+\documentclass[12pt,a4paper,oneside,openany]{report}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish,es-nodecimaldot]{babel}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage{geometry}
+\usepackage{setspace}
+\usepackage{csquotes}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{enumitem}
+\usepackage{float}
+\usepackage{caption}
+\usepackage{xcolor}
+\usepackage{xurl}
+\usepackage{listings}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,shapes.geometric,fit}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage{hyperref}
+\usepackage[backend=biber,style=apa,sorting=nyt,sortcites=true]{biblatex}
+
+\addbibresource{referencias.bib}
+\input{datos}
+
+\geometry{top=2.5cm,bottom=2.5cm,left=3cm,right=2.5cm}
+\onehalfspacing
+\setlength{\parindent}{1.25cm}
+\setlength{\parskip}{0.25em}
+\setlist{nosep,leftmargin=*}
+\captionsetup{font=small,labelfont=bf}
+\addto\captionsspanish{%
+  \renewcommand{\tablename}{Tabla}%
+  \renewcommand{\listtablename}{Índice de tablas}%
+}
+\renewcommand{\lstlistingname}{Listado}
+
+\definecolor{AcademicBlue}{HTML}{17365D}
+\definecolor{AcademicLight}{HTML}{EAF0F6}
+\definecolor{AcademicGray}{HTML}{5B6573}
+\definecolor{CodeBackground}{HTML}{F5F7F9}
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=AcademicBlue,
+  citecolor=AcademicBlue,
+  urlcolor=AcademicBlue,
+  pdftitle={\tituloProyecto},
+  pdfauthor={\autoresPDF}
+}
+
+\makeatletter
+\titleformat{\chapter}[display]
+  {\normalfont\bfseries\color{AcademicBlue}}
+  {\filleft\Large\@chapapp\ \thechapter}
+  {0.5ex}
+  {\titlerule\vspace{1ex}\filright\Huge}
+\makeatother
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\nouppercase{\leftmark}}
+\fancyhead[R]{\small\tituloCorto}
+\fancyfoot[C]{\thepage}
+\setlength{\headheight}{15pt}
+
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+\newcolumntype{C}{>{\centering\arraybackslash}X}
+\newcommand{\code}[1]{\texttt{\detokenize{#1}}}
+\urlstyle{tt}
+
+\lstdefinelanguage{CQL}{
+  morekeywords={CREATE,KEYSPACE,TABLE,IF,NOT,EXISTS,WITH,USE,PRIMARY,KEY,
+    CLUSTERING,ORDER,BY,ASC,DESC,SELECT,FROM,WHERE,AND,INSERT,INTO,VALUES,
+    UPDATE,SET,UUID,TIMESTAMP,DATE,TEXT,INT},
+  sensitive=false,
+  morecomment=[l]{--},
+  morestring=[b]'
+}
+\lstset{
+  basicstyle=\ttfamily\small,
+  keywordstyle=\bfseries\color{AcademicBlue},
+  commentstyle=\itshape\color{AcademicGray},
+  backgroundcolor=\color{CodeBackground},
+  frame=single,
+  rulecolor=\color{AcademicLight},
+  breaklines=true,
+  showstringspaces=false,
+  columns=fullflexible,
+  keepspaces=true,
+  captionpos=b
+}
+
+\tikzset{
+  component/.style={
+    draw=AcademicBlue,
+    fill=AcademicLight,
+    rounded corners=2pt,
+    minimum height=1.2cm,
+    text width=2.7cm,
+    align=center,
+    font=\small
+  },
+  datastore/.style={
+    component,
+    shape=cylinder,
+    shape border rotate=90,
+    aspect=0.25,
+    minimum height=1.6cm
+  },
+  flow/.style={-{Latex[length=2.5mm]},thick,draw=AcademicBlue},
+  eventflow/.style={-{Latex[length=2.5mm]},thick,dashed,draw=AcademicGray},
+  state/.style={
+    draw=AcademicBlue,
+    fill=white,
+    rounded corners=2pt,
+    minimum width=2.1cm,
+    minimum height=0.8cm,
+    align=center,
+    font=\small
+  }
+}
+
+\begin{document}
+\hypersetup{pageanchor=false}
+
+\begin{titlepage}
+  \centering
+  {\large\bfseries\MakeUppercase{\institucion}\par}
+  \vspace{0.4cm}
+  {\large\facultad\par}
+  \vspace{2.2cm}
+  {\Huge\bfseries\color{AcademicBlue}\tituloProyecto\par}
+  \vspace{0.6cm}
+  {\Large\tipoDocumento\par}
+  \vspace{0.4cm}
+  {\large\bfseries\grupo\par}
+  \vfill
+  \begin{tabular}{rl}
+    \textbf{Integrantes:} & \begin{minipage}[t]{0.65\textwidth}\raggedright\setlength{\parskip}{0.22cm}\autores\end{minipage}\\[1.05cm]
+    \textbf{Asignatura:} & \asignatura\\[0.35cm]
+    \textbf{Docente:} & \docente
+  \end{tabular}
+  \vfill
+  {\large\ciudadPais\par}
+  {\large\fechaEntrega\par}
+\end{titlepage}
+
+\hypersetup{pageanchor=true}
+\pagenumbering{roman}
+\input{capitulos/00-resumen}
+\tableofcontents
+\listoffigures
+\listoftables
+\input{capitulos/00-siglas}
+\clearpage
+
+\pagenumbering{arabic}
+\input{capitulos/01-introduccion}
+\input{capitulos/02-fundamentos}
+\input{capitulos/03-metodologia-requisitos}
+\input{capitulos/04-arquitectura}
+\input{capitulos/05-diseno-datos}
+\input{capitulos/06-validacion}
+\input{capitulos/07-plan-riesgos}
+\input{capitulos/08-conclusiones}
+
+\printbibliography[heading=bibintoc,title={Referencias bibliográficas}]
+
+\appendix
+\input{apendices/apendices}
+
+\end{document}

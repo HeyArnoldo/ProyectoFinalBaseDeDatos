@@ -1,0 +1,137 @@
+\chapter{Arquitectura de la solución}
+\label{chap:arquitectura}
+
+\section{Vista general}
+
+La arquitectura separa presentación, lógica operacional y proyecciones. El navegador accede únicamente al servidor web; Nginx entrega la aplicación y dirige las solicitudes \code{/api} hacia NestJS. La API contiene los módulos de catálogo, pedidos, autenticación, salud y proyecciones. El trabajador de salida se ejecuta dentro del mismo proceso de la API para evitar un quinto servicio.
+
+\begin{figure}[H]
+  \centering
+  \begin{tikzpicture}[node distance=9mm and 8mm]
+    \node[component] (browser) {Navegador\\Invitado u operador};
+    \node[component,right=of browser] (web) {Web\\React + Nginx};
+    \node[component,right=of web] (api) {API + trabajador\\NestJS};
+    \node[datastore,right=of api] (mongo) {MongoDB\\fuente de verdad};
+    \node[datastore,below=16mm of api] (cassandra) {Cassandra\\dos proyecciones};
+
+    \draw[flow] (browser) -- node[above,font=\scriptsize] {HTTP} (web);
+    \draw[flow] (web) -- node[above,font=\scriptsize] {\code{/api}} (api);
+    \draw[flow] (api) -- node[above,font=\scriptsize] {operaciones} (mongo);
+    \draw[eventflow] (mongo.south) |- node[pos=0.25,left,font=\scriptsize] {salida} (api.south);
+    \draw[eventflow] (api) -- node[right,font=\scriptsize] {proyección} (cassandra);
+    \draw[flow] (cassandra.west) -| node[pos=0.25,below,font=\scriptsize] {lecturas} (api.south west);
+  \end{tikzpicture}
+  \caption{Arquitectura lógica implementada. Las líneas discontinuas representan el flujo asíncrono de eventos. Fuente: elaboración propia a partir de OpenSpec.}
+  \label{fig:arquitectura}
+\end{figure}
+
+\section{Responsabilidades de los componentes}
+
+\begin{table}[H]
+  \centering
+  \caption{Responsabilidad y límite de cada componente}
+  \label{tab:componentes}
+  \begin{tabularx}{\textwidth}{@{}p{3.2cm}YY@{}}
+    \toprule
+    \textbf{Componente} & \textbf{Responsabilidad} & \textbf{No debe realizar} \\
+    \midrule
+    Web & Presentar catálogo, compra y consola del operador; enviar claves de idempotencia & Calcular el total autoritativo ni conectarse a las bases de datos \\
+    API & Aplicar reglas, autorizar, coordinar transacciones y exponer consultas & Confiar en precios del cliente ni escribir vistas sin evento de salida \\
+    Trabajador & Reclamar eventos, proyectarlos, reintentar y reportar estado & Cambiar el estado de negocio del pedido \\
+    MongoDB & Validar y conservar catálogo, pedidos y salida & Actuar como réplica de tablas Cassandra \\
+    Cassandra & Responder dos consultas temporales predefinidas & Ser fuente de verdad o admitir consultas arbitrarias \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+\section{Flujo de creación y proyección de un pedido}
+
+La figura~\ref{fig:secuencia-compra} distingue la confirmación síncrona del pedido y su propagación asíncrona. La respuesta al invitado depende de la transacción de MongoDB, no de la disponibilidad inmediata de Cassandra.
+
+\begin{figure}[H]
+  \centering
+  \resizebox{\textwidth}{!}{%
+  \begin{tikzpicture}[font=\small]
+    \node[component,text width=2.2cm] at (0,0) (client) {Cliente};
+    \node[component,text width=2.2cm] at (4,0) (api) {API};
+    \node[component,text width=2.2cm] at (8,0) (mongo) {MongoDB};
+    \node[component,text width=2.2cm] at (12,0) (cassandra) {Cassandra};
+
+    \foreach \x in {0,4,8,12} {
+      \draw[dashed,AcademicGray] (\x,-0.7) -- (\x,-8.8);
+    }
+
+    \draw[flow] (0,-1.2) -- node[above] {\code{POST /orders} + clave} (4,-1.2);
+    \draw[flow] (4,-2.1) -- node[above] {leer artículos activos} (8,-2.1);
+    \draw[flow] (8,-2.8) -- node[above] {precios vigentes} (4,-2.8);
+    \draw[flow] (4,-3.7) -- node[above] {transacción: pedido + salida} (8,-3.7);
+    \draw[flow] (8,-4.4) -- node[above] {confirmación} (4,-4.4);
+    \draw[flow] (4,-5.1) -- node[above] {pedido aceptado} (0,-5.1);
+    \draw[eventflow] (4,-6.0) -- node[above] {reclamar evento} (8,-6.0);
+    \draw[eventflow] (4,-6.9) -- node[above] {upsert en dos tablas} (12,-6.9);
+    \draw[eventflow] (12,-7.8) -- node[above] {confirmación} (4,-7.8);
+    \draw[eventflow] (4,-8.6) -- node[above] {marcar procesado} (8,-8.6);
+  \end{tikzpicture}}
+  \caption{Secuencia de compra y proyección eventual. Fuente: elaboración propia a partir de OpenSpec.}
+  \label{fig:secuencia-compra}
+\end{figure}
+
+Antes de abrir la transacción, la API genera UUID, fecha y huella de la solicitud. El mismo conjunto de valores se reutiliza si el controlador del driver reintenta la función transaccional. Dentro de la transacción se insertan el pedido y el evento de salida. Una colisión de la clave de idempotencia devuelve el pedido original cuando la huella coincide y produce un conflicto HTTP cuando difiere.
+
+\section{Flujo de estados}
+
+El pedido sigue una máquina de estados explícita. Una actualización filtra tanto el identificador como el estado actual; por ello, dos operadores que intenten avanzar simultáneamente no pueden confirmar dos transiciones desde el mismo estado.
+
+\begin{figure}[H]
+  \centering
+  \resizebox{\textwidth}{!}{%
+  \begin{tikzpicture}[node distance=6mm]
+    \node[state] (pending) {PENDING};
+    \node[state,right=of pending] (confirmed) {CONFIRMED};
+    \node[state,right=of confirmed] (preparing) {PREPARING};
+    \node[state,right=of preparing] (ready) {READY};
+    \node[state,right=of ready] (dispatched) {DISPATCHED};
+    \node[state,right=of dispatched] (delivered) {DELIVERED};
+    \node[state,below=12mm of confirmed] (cancelled) {CANCELLED};
+
+    \draw[flow] (pending) -- (confirmed);
+    \draw[flow] (confirmed) -- (preparing);
+    \draw[flow] (preparing) -- (ready);
+    \draw[flow] (ready) -- (dispatched);
+    \draw[flow] (dispatched) -- (delivered);
+    \draw[flow] (pending.south) |- (cancelled.west);
+    \draw[flow] (confirmed) -- (cancelled);
+  \end{tikzpicture}}
+  \caption{Transiciones permitidas para el estado de un pedido. Fuente: elaboración propia a partir de OpenSpec.}
+  \label{fig:estados}
+\end{figure}
+
+Cada transición válida agrega una entrada al historial del pedido y un evento \code{ORDER_STATUS_CHANGED} dentro de la misma transacción. Una transición inválida no modifica el documento ni crea una salida.
+
+\section{Seguridad y límites de confianza}
+
+El catálogo y la creación de pedidos son públicos. El inicio de sesión compara la credencial presentada con el resumen configurado en el entorno y, si coincide, emite un JWT HS256 de 15 minutos. La cookie usa \code{HttpOnly}, \code{Secure}, \code{SameSite=Strict} y \code{Path=/}; no se incluyen renovación ni registro de operadores. Las mutaciones de catálogo, las transiciones, el estado de la proyección, la reproducción y las lecturas Cassandra exigen autorización. Esta separación sigue el principio de mínima exposición recomendado para controles de acceso y sesiones \parencite{owaspASVS}.
+
+La interfaz nunca transmite un precio autoritativo. La API valida forma, cantidad, identidad y vigencia de cada artículo, y reconstruye todas las sumas mediante enteros en centavos. Las bases de datos no publican puertos al equipo anfitrión; el acceso directo con herramientas de consola se reserva al entorno controlado de evaluación.
+
+\section{Despliegue local}
+
+\begin{table}[H]
+  \centering
+  \caption{Topología y presupuesto de memoria}
+  \label{tab:memoria}
+  \begin{tabularx}{\textwidth}{@{}p{2.8cm}p{2.3cm}YY@{}}
+    \toprule
+    \textbf{Servicio} & \textbf{Límite} & \textbf{Persistencia} & \textbf{Exposición} \\
+    \midrule
+    Web & 96 MiB & Imagen inmutable & Único puerto publicado \\
+    API + trabajador & 384 MiB & Sin volumen de datos & Solo red interna \\
+    MongoDB & 1536 MiB & \code{mongodb_data} & Solo red interna \\
+    Cassandra & 3072 MiB & \code{cassandra_data} & Solo red interna \\
+    \midrule
+    \textbf{Total} & \textbf{5088 MiB} & Dos volúmenes con nombre & Cuatro contenedores \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+Las comprobaciones de salud encadenan la elección del primario de MongoDB, la disponibilidad de Cassandra, la inicialización de la API y, por último, el servidor web. Todos los servicios usan políticas de reinicio y rotación del controlador de registros para evitar crecimiento no acotado.

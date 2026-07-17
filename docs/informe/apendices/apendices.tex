@@ -1,0 +1,96 @@
+\chapter{Matriz de trazabilidad}
+\label{app:trazabilidad}
+
+\begin{longtable}{@{}p{1.5cm}p{4cm}p{3.7cm}p{3.9cm}@{}}
+  \caption{Trazabilidad entre requisitos, diseño y evidencia}\label{tab:trazabilidad}\\
+  \toprule
+  \textbf{Req.} & \textbf{Elemento de diseño} & \textbf{Prueba} & \textbf{Evidencia} \\
+  \midrule
+  \endfirsthead
+  \toprule
+  \textbf{Req.} & \textbf{Elemento de diseño} & \textbf{Prueba} & \textbf{Evidencia} \\
+  \midrule
+  \endhead
+  RF-01 & \code{catalog_items}; acceso público & Lectura activa e intento de mutación anónima & EV-02, EV-12 \\
+  RF-02 & Instantáneas y ecuación~\ref{eq:total} & Total falsificado e ítem inválido & EV-04, EV-05 \\
+  RF-03 & Índice de idempotencia y huella & Reintento igual y contenido distinto & EV-05 \\
+  RF-04 & Filtro por estado; figura~\ref{fig:estados} & Transición válida, inválida y concurrente & EV-13 \\
+  RF-05 & Guardia JWT y cookie segura & Matriz de sesión y permisos & EV-12 \\
+  RF-06 & Salida y trabajador & Entrega normal, parcial y repetida & EV-08--EV-10 \\
+  RF-07 & Claves primarias del listado~\ref{lst:cql} & Lecturas con y sin partición & EV-08 \\
+  RF-08 & Estado, retraso y reproducción & Caída y recuperación de Cassandra & EV-10 \\
+  RNF-01 & Validadores e índices MongoDB & Escrituras directas inválidas & EV-02, EV-03 \\
+  RNF-02 & Transacción pedido--salida & Falla forzada antes de confirmar & EV-04 \\
+  RNF-03 & Claves únicas y claves CQL & Repeticiones de API y trabajador & EV-05, EV-09 \\
+  RNF-04 & Endpoint de estado & Pendientes, intentos, retraso y error & EV-10 \\
+  RNF-05 & Semilla y ejecutor & Dos ejecuciones comparadas & EV-06, EV-07 \\
+  RNF-06 & Configuración y autorización & Casos sin sesión, inválidos y válidos & EV-12 \\
+  RNF-07 & Límites Compose & Inspección de configuración resuelta & EV-01 \\
+  RNF-08 & Volúmenes con nombre & Reinicio sin eliminación de volumen & EV-01 \\
+  \bottomrule
+\end{longtable}
+
+\chapter{Resumen de interfaces}
+\label{app:api}
+
+La tabla resume el límite funcional de la API. El contrato OpenAPI ejecutable conserva el detalle de solicitudes, respuestas y códigos de error.
+
+\begin{longtable}{@{}p{2.2cm}p{5.6cm}p{2.2cm}p{3.1cm}@{}}
+  \caption{Operaciones HTTP implementadas}\label{tab:endpoints}\\
+  \toprule
+  \textbf{Método} & \textbf{Ruta} & \textbf{Acceso} & \textbf{Propósito} \\
+  \midrule
+  \endfirsthead
+  \toprule
+  \textbf{Método} & \textbf{Ruta} & \textbf{Acceso} & \textbf{Propósito} \\
+  \midrule
+  \endhead
+  GET & \nolinkurl{/api/catalog} & Público & Consultar artículos activos \\
+  POST & \nolinkurl{/api/orders} & Público & Crear pedido idempotente \\
+  POST & \nolinkurl{/api/operator/login} & Público & Iniciar sesión de operador \\
+  POST & \nolinkurl{/api/operator/logout} & Operador & Cerrar sesión \\
+  \shortstack{POST/\\PATCH} & \nolinkurl{/api/operator/catalog} & Operador & Administrar catálogo \\
+  PATCH & \nolinkurl{/api/operator/orders/:id/status} & Operador & Cambiar estado del pedido \\
+  GET & \nolinkurl{/api/operator/projections/status} & Operador & Consultar retraso y errores \\
+  POST & \nolinkurl{/api/operator/projections/replay} & Operador & Reproducir eventos \\
+  GET & \nolinkurl{/api/operator/projections/orders/:id} & Operador & Leer línea temporal \\
+  GET & \nolinkurl{/api/operator/projections/restaurants/:id/days/:day} & Operador & Leer actividad diaria \\
+  \bottomrule
+\end{longtable}
+
+\chapter{Correspondencia con la rúbrica}
+\label{app:rubrica}
+
+\begin{table}[H]
+  \centering
+  \caption{Ruta de revisión según los criterios de evaluación disponibles}
+  \label{tab:rubrica}
+  \begin{tabularx}{\textwidth}{@{}p{5cm}Y@{}}
+    \toprule
+    \textbf{Criterio} & \textbf{Secciones y artefactos} \\
+    \midrule
+    Análisis del problema y diseño & Capítulos~\ref{chap:introduccion}--\ref{chap:datos}; figuras~\ref{fig:arquitectura}--\ref{fig:estados} \\
+    Implementación de bases de datos y tecnologías & Capítulo~\ref{chap:datos}; evidencia EV-02--EV-11 \\
+    Calidad técnica, pruebas y resultados & Capítulo~\ref{chap:validacion}; matriz de trazabilidad \\
+    Informe técnico & Estructura completa, tablas, figuras, referencias y apéndices \\
+    Sustentación y dominio & Lista de verificación del apéndice~\ref{app:entrega} y demostración reproducible \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+\chapter{Lista de verificación para la entrega}
+\label{app:entrega}
+
+\begin{itemize}[label=$\square$]
+  \item Se reemplazaron todos los datos entre corchetes de la portada.
+  \item El resumen coincide con la versión realmente implementada.
+  \item Cada requisito mantiene una prueba y una evidencia trazable.
+  \item Cada evidencia de la matriz incluye su artefacto ejecutado y análisis.
+  \item Las figuras tienen número, título, referencia en el texto y fuente cuando corresponde.
+  \item Las tablas de resultados incluyen unidades, entorno y número de repeticiones.
+  \item Las capturas no contienen datos personales, secretos ni información irrelevante.
+  \item Todas las fuentes citadas aparecen en la bibliografía y viceversa.
+  \item El PDF compila sin referencias, citas o marcadores sin resolver.
+  \item Otra persona puede ejecutar la demostración siguiendo instrucciones escritas.
+  \item Cada integrante puede explicar las decisiones, limitaciones y resultados sin depender de otro integrante.
+\end{itemize}

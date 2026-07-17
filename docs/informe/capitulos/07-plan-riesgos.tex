@@ -1,0 +1,74 @@
+\chapter{Implementación, riesgos y limitaciones}
+\label{chap:plan}
+
+\section{Desarrollo incremental}
+
+La implementación se organizó en cortes verticales que mantuvieron juntos código, pruebas y evidencia. Este orden redujo el riesgo de construir interfaces sobre supuestos de datos todavía no verificados.
+
+\begin{table}[H]
+  \centering
+  \caption{Fases de desarrollo}
+  \label{tab:fases}
+  \begin{tabularx}{\textwidth}{@{}p{1.2cm}p{3.4cm}YY@{}}
+    \toprule
+    \textbf{Fase} & \textbf{Resultado} & \textbf{Trabajo principal} & \textbf{Condición de cierre} \\
+    \midrule
+    1 & Base verificable & Espacio de trabajo, contratos, pruebas y Compose mínimo & Herramientas ejecutables y servicios con salud \\
+    2 & Persistencia operacional & Inicialización MongoDB, catálogo y consultas indexadas & Validadores, índices y semilla demostrados \\
+    3 & Compra segura & Totales, transacción, idempotencia y salida & Casos normal, repetido y abortado superan pruebas \\
+    4 & Operación & Autenticación, transiciones e historial & Accesos y carreras verificadas \\
+    5 & Proyecciones & Esquema CQL, trabajador, estado y reproducción & Dos vistas convergen ante duplicados y caída \\
+    6 & Interfaz y evidencia & Flujos web, carga acotada y ejecutor determinista & Matriz EV-01--EV-13 completa \\
+    7 & Cierre académico & Análisis, figuras, revisión y sustentación & Informe sin pendientes y demostración repetible \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+\section{Riesgos y mitigaciones}
+
+\begin{longtable}{@{}p{3.7cm}p{1.7cm}p{1.7cm}p{6.1cm}@{}}
+  \caption{Registro de riesgos}\label{tab:riesgos}\\
+  \toprule
+  \textbf{Riesgo} & \textbf{Prob.} & \textbf{Impacto} & \textbf{Tratamiento} \\
+  \midrule
+  \endfirsthead
+  \toprule
+  \textbf{Riesgo} & \textbf{Prob.} & \textbf{Impacto} & \textbf{Tratamiento} \\
+  \midrule
+  \endhead
+  Cassandra inestable con 3072 MiB & Media & Alto & Prueba prolongada; aumentar solo Cassandra a 4096 MiB si la evidencia demuestra necesidad y documentar la desviación. \\
+  Retraso o falla de proyección & Media & Alto & Idempotencia, retroceso, arrendamiento, estado visible y reproducción selectiva. \\
+  Transacciones no habilitadas & Media & Alto & Inicialización y salud del conjunto de réplica antes de aceptar tráfico. \\
+  Índice no usado por la consulta & Media & Medio & Alinear filtro y orden; inspeccionar \code{explain}; justificar cualquier cambio de índice. \\
+  Datos personales expuestos & Baja & Alto & Datos ficticios, mínimos privilegios, bases sin puertos, secretos por entorno y limpieza de evidencias. \\
+  Crecimiento de registros o volúmenes & Media & Medio & Rotación \code{json-file}, semillas acotadas y procedimiento documentado de limpieza. \\
+  Informe afirma más de lo probado & Media & Alto & Trazabilidad, estados de evidencia y revisión explícita de limitaciones. \\
+  Diferencias entre equipos & Media & Medio & Imágenes fijadas, manifiesto único, versiones registradas y salidas estructurales. \\
+  \bottomrule
+\end{longtable}
+
+\section{Privacidad y seguridad de los datos}
+
+El pedido contiene nombre, teléfono y dirección, datos que deben tratarse como información personal. El conjunto semilla y las evidencias usan identidades completamente ficticias. No se incorporan credenciales, tokens, teléfonos reales ni direcciones reales al repositorio o al informe. Las capturas se revisan antes de su inclusión y la API limita las lecturas operacionales al operador autenticado.
+
+La autenticación implementada es proporcional a un prototipo local con un único operador, pero no equivale a un sistema completo de gestión de identidades. Un despliegue real requeriría rotación de secretos, protección CSRF evaluada según el mecanismo de cookie, auditoría, recuperación de cuenta, cifrado en tránsito y políticas de conservación de datos más completas \parencite{owaspASVS}.
+
+\section{Limitaciones y validez}
+
+\subsection{Limitaciones técnicas}
+
+\begin{itemize}
+  \item MongoDB y Cassandra se ejecutan con un nodo cada uno; no se demuestra tolerancia a fallos de nodo.
+  \item El trabajador está embebido en una única API; no se evalúa coordinación entre múltiples trabajadores.
+  \item Las dos tablas Cassandra soportan solo las consultas declaradas; nuevas consultas exigirían nuevas proyecciones.
+  \item No se incluyen pagos, mensajería ni despliegue productivo.
+  \item La memoria limitada favorece reproducibilidad local, no una comparación de rendimiento entre motores.
+\end{itemize}
+
+\subsection{Amenazas a la validez}
+
+La \textbf{validez interna} puede verse afectada si quedan datos de ejecuciones anteriores; por ello se registra el estado de los volúmenes y se usan claves fijas. La \textbf{validez de constructo} exige que «recuperación» no se reduzca a que el contenedor vuelva a iniciar: se prueba la convergencia de eventos. La \textbf{validez externa} es limitada, pues un entorno de nodo único y carga pequeña no representa producción. La \textbf{confiabilidad} se fortalece ejecutando cada evidencia al menos dos veces desde la misma semilla y conservando salidas comparables.
+
+\section{Plan de reversión}
+
+Si una versión del trabajador produce proyecciones incorrectas, se detendrá su ejecución sin modificar MongoDB. Las tablas Cassandra podrán eliminarse y reconstruirse a partir de los eventos de salida conservados después de corregir el defecto. Si falla una versión de la API o de la interfaz, se restaurará la imagen anterior y se preservarán los volúmenes. Toda operación destructiva deberá estar precedida por una copia de la evidencia y una verificación de que MongoDB mantiene el historial necesario para la reproducción.

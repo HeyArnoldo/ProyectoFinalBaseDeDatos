@@ -1,0 +1,139 @@
+\chapter{Pruebas y evaluación}
+\label{chap:validacion}
+
+\section{Criterio de evidencia}
+
+La aplicación incorpora pruebas automatizadas y un ejecutor determinista para las propiedades de datos que exige la especificación. Un resultado se considera evidencia cuando identifica fecha, versión del código, comando, artefacto y criterio de aceptación. Una captura aislada puede complementar la evidencia, pero no reemplaza una prueba repetible.
+
+\section{Estrategia de pruebas}
+
+\begin{table}[H]
+  \centering
+  \caption{Capas de prueba}
+  \label{tab:capas-prueba}
+  \begin{tabularx}{\textwidth}{@{}p{2.8cm}p{4.4cm}Y@{}}
+    \toprule
+    \textbf{Capa} & \textbf{Objeto} & \textbf{Casos principales} \\
+    \midrule
+    Unitaria & Reglas puras y servicios con dobles & Totales, cantidades, transiciones, autenticación, reclamo y retroceso \\
+    Integración & API contra los motores del entorno local & Validadores, índices, aborto, idempotencia, escrituras preparadas y reproducción \\
+    Extremo a extremo & API HTTP con dependencias reales & Accesos, compra, transición, estado de proyección y lecturas particionadas \\
+    Evidencia técnica & Consultas y experimentos deterministas & Agregación, \code{explain}, duplicados, reinicios y convergencia \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+Las pruebas unitarias deben ser rápidas y aislar reglas. Las propiedades que dependen del motor, como el rechazo de un validador o la atomicidad real, pertenecen a integración y no deben simularse como prueba definitiva. Las pruebas de extremo a extremo verifican el límite HTTP y la autorización, mientras que el ejecutor de evidencia produce salidas adecuadas para el informe.
+
+\section{Entorno reproducible}
+
+Cada ejecución registra:
+
+\begin{itemize}
+  \item identificador del commit y fecha;
+  \item versiones de Docker, imágenes, Node.js, MongoDB y Cassandra;
+  \item sistema operativo, memoria disponible y límites configurados;
+  \item estado inicial de los volúmenes;
+  \item datos semilla, UUID, fechas y claves de idempotencia utilizados; y
+  \item comandos exactos junto con su código de salida.
+\end{itemize}
+
+La interfaz principal de ejecución es:
+
+\begin{lstlisting}[caption={Secuencia para levantar y evaluar el entorno}]
+docker compose -f infra/compose.yaml up -d --build
+docker compose -f infra/compose.yaml ps
+node evidence/run.mjs
+\end{lstlisting}
+
+Los comandos utilizan los manifiestos versionados. El ejecutor escribe artefactos estructurados en \code{evidence/} y no depende de copiar manualmente datos desde una interfaz gráfica.
+
+\section{Protocolos experimentales}
+
+\subsection{P1: inicio determinista y persistencia}
+
+\begin{enumerate}
+  \item iniciar desde volúmenes vacíos y construir los cuatro servicios;
+  \item esperar las comprobaciones de salud y verificar que el catálogo semilla sea consultable;
+  \item comprobar el número de contenedores y sus límites configurados;
+  \item crear un pedido de control, reiniciar MongoDB y Cassandra sin eliminar volúmenes; y
+  \item verificar que el pedido y sus proyecciones sobrevivan al reinicio.
+\end{enumerate}
+
+\textbf{Criterio:} cuatro servicios sanos, 5088~MiB configurados en total y datos persistentes tras el reinicio.
+
+\subsection{P2: validación, unicidad y atomicidad}
+
+La prueba intenta insertar directamente un artículo con precio de tipo incorrecto y dos artículos con el mismo par restaurante--SKU. MongoDB debe rechazar ambas operaciones. Luego se fuerza una falla entre la inserción del pedido y la salida dentro de la transacción.
+
+\textbf{Criterio:} no queda ningún documento parcial; los validadores e índices, no solo la API, rechazan los casos inválidos.
+
+\subsection{P3: cálculo e idempotencia}
+
+La prueba envía una compra con cantidades válidas y un total falsificado. Después repite la misma solicitud con la misma clave y envía un contenido diferente con esa clave.
+
+\textbf{Criterio:} el total coincide con la ecuación~\ref{eq:total}; los dos primeros intentos devuelven el mismo pedido y existe un único evento; el tercer intento responde conflicto sin mutación.
+
+\subsection{P4: agregación y plan de consulta}
+
+Una semilla fija distribuye pedidos entre estados y fechas conocidas. El ejecutor produce totales agrupados y analiza una consulta por restaurante e intervalo, ordenada por fecha descendente y con \code{hint("ix_orders_restaurant_createdAt")}. La salida estable incluye índice, etapas y cantidades de documentos y claves examinadas, pero excluye tiempos.
+
+\textbf{Criterio:} dos ejecuciones desde la misma semilla generan agregaciones idénticas e identifican el índice esperado. La relación entre claves y documentos examinados se analiza, no se limita a mostrar una captura.
+
+\subsection{P5: duplicados y recuperación de Cassandra}
+
+\begin{enumerate}
+  \item proyectar un evento y registrar ambas vistas;
+  \item restablecer su estado de salida para provocar una segunda entrega;
+  \item comprobar que cada vista conserva un único evento lógico;
+  \item detener Cassandra y crear nuevos pedidos o transiciones;
+  \item registrar el crecimiento de pendientes y el retraso más antiguo;
+  \item reiniciar Cassandra, solicitar reproducción y esperar convergencia; y
+  \item comparar los eventos esperados en MongoDB con las filas de ambas vistas.
+\end{enumerate}
+
+\textbf{Criterio:} no hay duplicados lógicos; al finalizar, cada evento esperado existe en las dos vistas, no quedan pendientes atribuibles a la interrupción y el retraso vuelve al umbral normal.
+
+\subsection{P6: carga acotada de proyecciones}
+
+La prueba \code{projection-load.spec.ts} genera tres lotes crecientes de 50, 250 y 1000 eventos con identificadores deterministas. Para cada lote registra el máximo de eventos pendientes, el tiempo de convergencia, los reintentos y la igualdad final entre eventos esperados y filas lógicas de ambas vistas. La medición conserva los límites de memoria de la tabla~\ref{tab:memoria} y no ejecuta otras cargas en paralelo.
+
+\textbf{Criterio:} todos los lotes convergen sin pérdida ni duplicados lógicos, no quedan eventos fallidos y los contenedores respetan sus límites. Los tiempos describirán solamente este entorno; no se interpretarán como una evaluación de escalabilidad productiva.
+
+\subsection{P7: autorización}
+
+La matriz de autorización ejecuta cada endpoint protegido sin cookie, con credenciales inválidas, con sesión vencida y con una sesión válida. También verifica que la cookie no sea accesible desde JavaScript y que las respuestas fallidas no revelen datos operacionales.
+
+\textbf{Criterio:} solamente la sesión válida permite la operación; los intentos rechazados no producen mutaciones.
+
+\section{Matriz de evidencias y aceptación}
+
+\begin{longtable}{@{}p{1.2cm}p{3.5cm}p{4.8cm}p{3.7cm}@{}}
+  \caption{Evidencia y criterio de aceptación}\label{tab:evidencia}\\
+  \toprule
+  \textbf{ID} & \textbf{Propiedad} & \textbf{Artefacto} & \textbf{Criterio de aceptación} \\
+  \midrule
+  \endfirsthead
+  \toprule
+  \textbf{ID} & \textbf{Propiedad} & \textbf{Artefacto} & \textbf{Criterio de aceptación} \\
+  \midrule
+  \endhead
+  EV-01 & Cuatro servicios y límites & Configuración resuelta y estado de Compose & Cuatro servicios sanos y 5088 MiB configurados \\
+  EV-02 & Validación de esquema & Validador y escrituras inválidas & MongoDB rechaza tipos y documentos no permitidos \\
+  EV-03 & Índices requeridos & Nombre, clave y unicidad & Coinciden todos los índices de la tabla~\ref{tab:indices} \\
+  EV-04 & Atomicidad de compra & Aborto y conteos antes/después & No queda pedido ni salida parcial \\
+  EV-05 & Idempotencia & Respuestas y conteos de reintentos & Existe un pedido y un evento por clave lógica \\
+  EV-06 & Agregaciones & Salida ordenada de la semilla & Dos ejecuciones generan el mismo resultado \\
+  EV-07 & Plan de consulta & Subconjunto de \code{executionStats} & El plan identifica el índice esperado \\
+  EV-08 & Dos vistas Cassandra & Consultas preparadas por partición & Ambas consultas devuelven eventos ordenados \\
+  EV-09 & Entrega duplicada & Filas antes y después del reintento & Cada vista conserva un evento lógico \\
+  EV-10 & Recuperación & Pendientes, retraso y convergencia & La reproducción vacía el retraso de la interrupción \\
+  EV-11 & Carga de proyección & Lotes y conteos finales & Cada lote converge sin pérdida ni duplicados \\
+  EV-12 & Autorización & Matriz de respuestas y mutaciones & Solo la sesión válida accede o modifica \\
+  EV-13 & Suite automatizada & Reporte por capa y versiones & Todas las suites terminan con código de salida cero \\
+  \bottomrule
+\end{longtable}
+
+\section{Análisis de resultados}
+
+El análisis no se limita a indicar que una prueba «aprobó». Para cada evidencia se compara el comportamiento observado con el criterio, se explican desviaciones y se discuten sus causas. Los tiempos se informan únicamente junto con el entorno, el número de repeticiones y la forma de agregación. Dado el nodo único y la escala académica, ninguna medición se generaliza como prueba de rendimiento productivo o alta disponibilidad.

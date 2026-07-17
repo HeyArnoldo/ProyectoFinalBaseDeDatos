@@ -1,0 +1,17 @@
+\chapter*{Resumen}
+\addcontentsline{toc}{chapter}{Resumen}
+
+Este informe presenta el diseño, la implementación y la evaluación de una plataforma web para gestionar el catálogo y los pedidos de un restaurante mediante persistencia políglota. MongoDB funciona como fuente operacional de verdad y Apache Cassandra mantiene dos proyecciones de actividad orientadas a consultas. La integración entre ambos almacenes utiliza una salida transaccional (\emph{transactional outbox}) y un trabajador idempotente con entrega al menos una vez. La arquitectura se compone de una interfaz React, una API NestJS, MongoDB y Cassandra, ejecutados en un entorno local de cuatro contenedores con recursos limitados.
+
+El trabajo sigue una metodología guiada por especificaciones. Los requisitos se expresan mediante escenarios verificables, se relacionan con decisiones de diseño y se comprueban mediante pruebas unitarias, de integración y de extremo a extremo. El documento presta especial atención a la atomicidad del registro de pedidos, el cálculo de totales en el servidor, la validez de las transiciones de estado, la idempotencia, la recuperación ante fallos y el diseño de Cassandra a partir de patrones de consulta. La evaluación se apoya en artefactos y criterios de aceptación reproducibles, evitando depender únicamente de capturas de pantalla.
+
+\noindent\textbf{Palabras clave:} persistencia políglota, MongoDB, Apache Cassandra, bases de datos NoSQL, salida transaccional, idempotencia, Docker Compose.
+
+\chapter*{Abstract}
+\addcontentsline{toc}{chapter}{Abstract}
+
+This report presents the design, implementation, and evaluation of a restaurant catalog and order management platform based on polyglot persistence. MongoDB acts as the operational source of truth, while Apache Cassandra maintains two query-oriented activity projections. Both stores are integrated through a transactional outbox and an idempotent worker providing at-least-once delivery. The architecture consists of a React interface, a NestJS API, MongoDB, and Cassandra, running in a resource-bounded four-container local environment.
+
+The project follows a specification-driven methodology. Requirements are stated as verifiable scenarios, linked to design decisions, and verified through unit, integration, and end-to-end testing. The report focuses on atomic order creation, server-side total calculation, valid state transitions, idempotency, failure recovery, and query-first Cassandra modeling. The evaluation uses reproducible artifacts and acceptance criteria instead of relying only on screenshots.
+
+\noindent\textbf{Keywords:} polyglot persistence, MongoDB, Apache Cassandra, NoSQL databases, transactional outbox, idempotency, Docker Compose.

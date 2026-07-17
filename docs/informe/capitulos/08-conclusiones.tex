@@ -1,0 +1,10 @@
+\chapter{Conclusiones}
+\label{chap:conclusiones}
+
+La solución implementada utiliza persistencia políglota con una división justificable: MongoDB conserva decisiones operacionales y Cassandra responde dos consultas temporales derivadas. Esta separación evita presentar dos bases de datos como réplicas equivalentes y permite aprovechar las propiedades específicas de cada modelo. La salida transaccional conecta ambos almacenes sin afirmar atomicidad distribuida; la entrega al menos una vez se vuelve segura a nivel lógico mediante claves idempotentes y capacidad de reproducción.
+
+La integridad se aborda en varias capas. El servidor reconstruye precios y totales, las transacciones agrupan cada cambio con su evento, los filtros de estado previenen transiciones concurrentes incompatibles y MongoDB conserva validadores e índices como última línea de defensa. En Cassandra, las claves de partición y agrupación se derivan de consultas concretas, por lo que no es necesario recurrir a filtrado global.
+
+La implementación materializa los requisitos mediante componentes con límites explícitos y una estrategia de evaluación repetible. La matriz del capítulo~\ref{chap:validacion} relaciona cada propiedad con su artefacto y criterio de aceptación, lo que permite revisar el sistema sin depender de una demostración improvisada. Las conclusiones se mantienen dentro de las limitaciones de un entorno académico de nodo único y no extrapolan resultados hacia alta disponibilidad o rendimiento productivo.
+
+Como trabajo futuro, después de cerrar el alcance académico, podrían evaluarse múltiples trabajadores, replicación real, mayor variedad de consultas y observabilidad persistente. Tales extensiones deben tratarse como nuevos experimentos y no como propiedades implícitas de la solución actual.

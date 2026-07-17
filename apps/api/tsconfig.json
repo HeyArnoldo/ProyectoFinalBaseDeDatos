@@ -1,0 +1,12 @@
+{
+  "extends": "../../packages/tsconfig/strict.json",
+  "compilerOptions": {
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "outDir": "dist",
+    "rootDir": ".",
+    "sourceMap": true,
+    "types": ["node", "jest"]
+  },
+  "include": ["src", "test"]
+}

@@ -1,0 +1,53 @@
+\chapter{Marco teórico y tecnológico}
+\label{chap:fundamentos}
+
+\section{Persistencia políglota}
+
+La persistencia políglota consiste en seleccionar distintos modelos de almacenamiento dentro de un sistema según las características de los datos y sus patrones de acceso, en lugar de imponer una única tecnología a todos los problemas \parencite{sadalage2012}. Esta estrategia no elimina la complejidad: desplaza parte de ella hacia la integración, la observabilidad y el tratamiento de fallos. Por tanto, la adopción de dos motores solo se justifica si sus límites de responsabilidad son explícitos.
+
+En este proyecto, MongoDB es autoritativo: una decisión de negocio se considera confirmada cuando su transacción se confirma allí. Cassandra no acepta cambios que regresen al dominio operacional; conserva vistas reconstruibles. Esta relación unidireccional evita conflictos entre dos fuentes de verdad.
+
+\begin{table}[H]
+  \centering
+  \caption{Asignación de responsabilidades entre los almacenes}
+  \label{tab:responsabilidades}
+  \begin{tabularx}{\textwidth}{@{}p{3cm}YY@{}}
+    \toprule
+    \textbf{Criterio} & \textbf{MongoDB} & \textbf{Cassandra} \\
+    \midrule
+    Función & Estado operacional autoritativo & Proyecciones derivadas \\
+    Escrituras & Catálogo, pedidos, historial y salida & Eventos entregados por el trabajador \\
+    Consistencia requerida & Atomicidad dentro del flujo de pedido & Convergencia eventual \\
+    Consultas principales & Catálogo, pedido, agregaciones y administración & Línea temporal y actividad por día \\
+    Recuperación & Volumen persistente y transacciones & Reproducción desde la salida de MongoDB \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+\section{MongoDB como almacén operacional}
+
+MongoDB almacena documentos BSON y permite que datos relacionados que se consultan en conjunto se representen de forma agregada. La flexibilidad del modelo documental no implica ausencia de estructura. Los validadores de colección permiten imponer tipos, campos obligatorios y restricciones mediante \code{$jsonSchema} \parencite{mongodbValidation}. El proyecto emplea validación estricta para evitar que escrituras directas o errores de aplicación introduzcan documentos incompatibles.
+
+Los índices únicos trasladan invariantes como la identidad de un SKU por restaurante o la unicidad de una clave de idempotencia al motor de datos \parencite{mongodbUniqueIndexes}. El índice compuesto sobre restaurante y fecha, por su parte, debe corresponder al filtro y al ordenamiento de la consulta operacional. Su utilización no se asume: se verifica mediante estadísticas de ejecución y el índice seleccionado por el planificador \parencite{mongodbExplain}.
+
+La creación de un pedido y de su evento afecta dos documentos en colecciones diferentes. MongoDB admite transacciones multidocumento en conjuntos de réplicas; los cambios no son visibles fuera de la transacción antes de la confirmación \parencite{mongodbTransactions}. El diseño utiliza un conjunto de réplica de un solo miembro para habilitar esta semántica en el laboratorio. Esta configuración es funcional para el experimento, pero no proporciona tolerancia a la caída del nodo.
+
+\section{Cassandra y el modelado orientado a consultas}
+
+Apache Cassandra es un almacén particionado diseñado para distribuir datos y mantener disponibilidad mediante replicación \parencite{lakshman2010}. Su modelo exige partir de las consultas: la clave de partición determina dónde se ubican las filas y las columnas de agrupación determinan su orden dentro de la partición \parencite{cassandraDDL}.
+
+La solución define exactamente dos tablas. La primera agrupa todos los eventos de un pedido; la segunda agrupa los eventos de un restaurante durante un día. En ambos casos, la consulta proporciona la clave de partición completa y puede recorrer el orden de agrupación. La implementación no recurre a \code{ALLOW FILTERING}, porque un filtrado que no respeta el modelo puede requerir explorar datos fuera de la partición prevista \parencite{cassandraDML}.
+
+El prototipo utiliza un único nodo y factor de replicación uno. En consecuencia, demuestra modelado CQL y recuperación mediante reproducción de eventos, pero no alta disponibilidad ni escalabilidad horizontal. Es importante separar la propiedad general de Cassandra de lo que la configuración experimental puede probar.
+
+\section{Consistencia, salida transaccional e idempotencia}
+
+Una transacción distribuida entre MongoDB y Cassandra aumentaría de forma innecesaria el alcance del proyecto. Además, los sistemas distribuidos deben tratar explícitamente los compromisos entre consistencia y disponibilidad cuando existen particiones de red \parencite{gilbert2002}. El patrón de salida transaccional registra la modificación del dominio y un mensaje pendiente dentro de la misma transacción local. Un trabajador publica después ese mensaje en el almacén derivado \parencite{richardson2018}.
+
+Este patrón evita perder el evento entre la confirmación del pedido y el intento de publicación, pero no ofrece una entrega física exactamente una vez. Si el trabajador falla después de escribir en Cassandra y antes de marcar el evento como procesado, volverá a intentarlo. La corrección depende de que el mismo \code{eventId} forme parte de la clave primaria de las dos proyecciones, de modo que una repetición represente el mismo evento lógico. La estrategia sigue el principio de diseñar operaciones recuperables frente a límites transaccionales \parencite{helland2007,kleppmann2017}.
+
+\section{Contenedores y reproducibilidad}
+
+Docker Compose permite describir servicios, redes, volúmenes y comprobaciones de salud en un manifiesto. Una dependencia con condición \code{service_healthy} espera a que el servicio requerido supere su comprobación, no solo a que el proceso haya iniciado \parencite{dockerStartup}. En el proyecto, estas condiciones ordenan la inicialización del conjunto de réplica, Cassandra, la API y la interfaz. Los volúmenes con nombre conservan los datos entre reinicios y los límites de memoria hacen explícito el costo del experimento.
+
+La contenerización mejora la repetibilidad del entorno, pero no garantiza por sí sola resultados idénticos. También se necesitan versiones fijadas, datos semilla, claves y fechas estables, comandos documentados y artefactos que excluyan mediciones volátiles cuando no sean objeto del análisis.

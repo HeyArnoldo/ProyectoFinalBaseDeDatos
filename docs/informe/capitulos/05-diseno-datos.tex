@@ -1,0 +1,147 @@
+\chapter{Diseño de datos y consistencia}
+\label{chap:datos}
+
+\section{Criterios de modelado}
+
+El modelo parte de invariantes del dominio y de consultas conocidas. Los identificadores compartidos se representan mediante UUID versión 4 canónicos: como cadenas en MongoDB y como valores \code{uuid} en Cassandra. Los importes se almacenan como enteros en centavos para evitar errores de redondeo binario. Las fechas operacionales son valores BSON \code{Date}; el trabajador las enlaza como marcas de tiempo CQL.
+
+\section{Modelo operacional en MongoDB}
+
+\begin{table}[H]
+  \centering
+  \caption{Colecciones operacionales implementadas}
+  \label{tab:colecciones}
+  \begin{tabularx}{\textwidth}{@{}p{2.7cm}YY@{}}
+    \toprule
+    \textbf{Colección} & \textbf{Contenido} & \textbf{Invariantes principales} \\
+    \midrule
+    \shortstack[l]{\code{catalog_}\\\code{items}} & Identidad, restaurante, SKU, nombre, precio, vigencia y fechas & Precio entero no negativo; SKU único por restaurante; sin campos adicionales \\
+    \code{orders} & Invitado, instantáneas de artículos, total, estado, historial e idempotencia & Cantidades positivas; suma coherente; estado enumerado; clave y huella obligatorias \\
+    \code{outbox} & Tipo, contenido mínimo, ocurrencia, estado, intentos, arrendamiento y error & Evento único; estados controlados; fechas de reintento y proceso coherentes \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+El pedido incrusta los datos necesarios para interpretar la compra aunque el catálogo cambie posteriormente. Cada línea contiene \code{catalogItemId}, SKU, nombre, precio unitario, cantidad y subtotal. Esta duplicación es deliberada: constituye una instantánea histórica, no una segunda fuente editable del catálogo.
+
+\subsection{Validación}
+
+La inicialización crea la colección o actualiza su validador mediante \code{collMod}. Se utiliza \code{validationAction: "error"}, campos obligatorios, tipos BSON precisos y ausencia de propiedades no declaradas en las formas anidadas. La validación de aplicación proporciona mensajes de negocio; la validación del motor constituye la última barrera de integridad.
+
+El total debe satisfacer la ecuación:
+
+\begin{equation}
+  \textit{totalCents} = \sum_{i=1}^{n}
+  \left(\textit{unitPriceCents}_{i} \times \textit{quantity}_{i}\right).
+  \label{eq:total}
+\end{equation}
+
+La API calcula cada término con precios leídos del catálogo activo. Un campo de total recibido del cliente se ignora; nunca participa en la ecuación~\ref{eq:total}.
+
+\subsection{Índices}
+
+\begin{table}[H]
+  \centering
+  \caption{Índices MongoDB y propósito}
+  \label{tab:indices}
+  \begin{tabularx}{\textwidth}{@{}p{4cm}p{4.2cm}Y@{}}
+    \toprule
+    \textbf{Nombre} & \textbf{Clave} & \textbf{Propósito} \\
+    \midrule
+    \shortstack[l]{\code{uq_catalog_}\\\code{restaurant_sku}} & \code{{restaurantId:1, sku:1}} & Impedir SKUs duplicados en un restaurante \\
+    \shortstack[l]{\code{uq_orders_}\\\code{idempotency}} & Clave de idempotencia única & Garantizar una compra lógica por clave \\
+    \shortstack[l]{\code{ix_orders_}\\\code{restaurant_}\\\code{createdAt}} & \code{{restaurantId:1, createdAt:-1}} & Consultar pedidos recientes por restaurante \\
+    \shortstack[l]{\code{uq_outbox_}\\\code{eventId}} & Identificador de evento único & Impedir dos salidas para el mismo evento lógico \\
+    \nolinkurl{ix_outbox_claim} & Proceso, reintento, arrendamiento y creación & Localizar de forma ordenada el evento elegible más antiguo \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+La consulta de evidencia filtra por \code{restaurantId} y un intervalo de \code{createdAt}, ordena en forma descendente y usa el índice nombrado como \emph{hint}. Del resultado de \code{explain("executionStats")} se conservan el nombre del índice, las etapas relevantes y las cantidades examinadas; los tiempos se excluyen porque varían entre equipos.
+
+\section{Transacciones e idempotencia}
+
+La compra sigue este algoritmo:
+
+\begin{enumerate}
+  \item validar la solicitud y normalizar la clave de idempotencia;
+  \item obtener los artículos activos y calcular instantáneas y total;
+  \item generar identificadores, fecha y huella estable antes de la transacción;
+  \item insertar el pedido y \code{ORDER_CREATED} en una transacción con escritura mayoritaria;
+  \item si la clave ya existe, comparar la huella y devolver el pedido original o un conflicto;
+  \item responder solamente después de confirmar la transacción.
+\end{enumerate}
+
+La generación previa de valores es importante porque el controlador puede reejecutar la función de la transacción ante ciertos errores transitorios. Crear identificadores diferentes dentro de cada intento rompería la equivalencia lógica del reintento.
+
+Las transiciones usan un filtro por identificador y estado actual. La operación actualiza el estado y el historial, y crea la salida correspondiente dentro de la misma transacción. Si otro actor cambió el estado, el filtro no encuentra el documento y la API informa conflicto sin emitir un evento falso.
+
+\section{Proyecciones en Cassandra}
+
+El esquema CQL implementado es el siguiente:
+
+\begin{lstlisting}[language=CQL,caption={Esquema de las dos proyecciones Cassandra},label={lst:cql}]
+CREATE KEYSPACE IF NOT EXISTS restaurant_projection
+WITH replication = {
+  'class': 'NetworkTopologyStrategy',
+  'datacenter1': 1
+};
+
+CREATE TABLE IF NOT EXISTS restaurant_projection.order_timeline_by_order (
+  order_id uuid,
+  occurred_at timestamp,
+  event_id uuid,
+  restaurant_id uuid,
+  event_type text,
+  order_status text,
+  total_cents int,
+  PRIMARY KEY ((order_id), occurred_at, event_id)
+) WITH CLUSTERING ORDER BY (occurred_at ASC, event_id ASC);
+
+CREATE TABLE IF NOT EXISTS restaurant_projection.restaurant_activity_by_day (
+  restaurant_id uuid,
+  day date,
+  occurred_at timestamp,
+  event_id uuid,
+  order_id uuid,
+  event_type text,
+  order_status text,
+  total_cents int,
+  PRIMARY KEY ((restaurant_id, day), occurred_at, event_id)
+) WITH CLUSTERING ORDER BY (occurred_at DESC, event_id ASC);
+\end{lstlisting}
+
+\nolinkurl{order_timeline_by_order} devuelve el historial cronológico de un pedido. \code{restaurant_}\allowbreak\code{activity_by_day} devuelve primero la actividad más reciente de una jornada. \code{event_id} resuelve empates de tiempo y hace que una repetición escriba la misma clave lógica. Las lecturas preparadas exigen \code{order_id = ?} o el par \code{restaurant_id = ? AND day = ?}.
+
+\section{Procesamiento de la salida}
+
+Cada dos segundos, el trabajador intenta reclamar el evento elegible más antiguo mediante un arrendamiento de 30 segundos. Después ejecuta escrituras preparadas e idempotentes en ambas tablas y marca condicionalmente el evento como procesado. Si una escritura falla, libera el evento y programa el siguiente intento con un retroceso acotado:
+
+\begin{equation}
+  \textit{delay}(a) = \min\left(2^{a}, 60\right)\ \text{segundos},
+  \label{eq:backoff}
+\end{equation}
+
+donde \(a\) es el número de intentos. El límite evita esperas crecientes sin cota. No obstante, un fallo permanente continuará requiriendo observación y acción del operador.
+
+\section{Modelo de consistencia y fallos}
+
+\begin{table}[H]
+  \centering
+  \caption{Comportamiento ante fallos}
+  \label{tab:fallos}
+  \begin{tabularx}{\textwidth}{@{}p{4.3cm}YY@{}}
+    \toprule
+    \textbf{Situación} & \textbf{Estado resultante} & \textbf{Mecanismo de recuperación} \\
+    \midrule
+    Falla antes de confirmar MongoDB & No existen pedido ni salida & El cliente reintenta con la misma clave \\
+    Falla después de confirmar MongoDB & Pedido y salida permanecen & El trabajador procesa el evento pendiente \\
+    Cassandra no disponible & MongoDB acumula salidas pendientes & Retroceso y reproducción al recuperarse \\
+    Falla tras escribir una sola vista & Una vista puede estar adelantada temporalmente & Reintento idempotente de ambas escrituras \\
+    Falla tras escribir ambas vistas & Las vistas existen y la salida puede seguir pendiente & Reintento sobre las mismas claves y marcado posterior \\
+    Dos operadores cambian el mismo estado & Solo una actualización coincide con el estado previo & La segunda recibe conflicto y no crea salida \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+La implementación exige atomicidad para los cambios incluidos en cada transacción MongoDB y consistencia eventual entre MongoDB y Cassandra. La garantía de lectura de MongoDB depende del \code{readConcern} configurado; por ello no se generaliza esta propiedad como consistencia fuerte global. Tampoco se promete lectura inmediata de las proyecciones después de una compra. El retraso visible y la capacidad de reproducción hacen observable ese intervalo de inconsistencia.

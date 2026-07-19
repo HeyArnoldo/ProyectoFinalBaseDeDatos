@@ -45,6 +45,6 @@ export class MongoLifecycle implements OnApplicationShutdown {
     MongoLifecycle,
     MongoBootstrapService,
   ],
-  exports: [MONGO_DATABASE],
+  exports: [MONGO_CLIENT, MONGO_DATABASE],
 })
 export class MongoModule {}

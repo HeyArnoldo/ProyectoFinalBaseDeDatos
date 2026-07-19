@@ -35,6 +35,9 @@ services:
       API_PORT: "3000"
       MONGODB_URI: mongodb://mongodb:27017/?replicaSet=rs0
       MONGODB_DATABASE: restaurant
+      OPERATOR_USERNAME: "${OPERATOR_USERNAME:?OPERATOR_USERNAME is required}"
+      OPERATOR_PASSWORD_HASH: "${OPERATOR_PASSWORD_HASH:?OPERATOR_PASSWORD_HASH is required}"
+      JWT_SECRET: "${JWT_SECRET:?JWT_SECRET is required}"
     depends_on:
       mongodb:
         condition: service_healthy

@@ -12,14 +12,16 @@ Four-container restaurant ordering platform: React/nginx, NestJS, MongoDB replic
 
 The API is available through `/api` on the same domain. The API, MongoDB, and Cassandra have no published host ports. MongoDB and Cassandra data persist in the `mongodb_data` and `cassandra_data` named volumes.
 
+Coolify must define `OPERATOR_PASSWORD_HASH_B64`; remove any old `OPERATOR_PASSWORD_HASH` variable because raw bcrypt `$` characters are interpreted by Docker Compose.
+
 Generate production values before deployment:
 
 ```powershell
-pnpm --filter @app/api exec node -e "const bcrypt=require('bcryptjs'); bcrypt.hash(process.argv[1], 12).then(console.log)" "YOUR_PASSWORD"
+pnpm --filter @app/api exec node -e "const bcrypt=require('bcryptjs'); bcrypt.hash(process.argv[1], 12).then((hash) => console.log(Buffer.from(hash).toString('base64')))" "YOUR_PASSWORD"
 node -e "console.log(require('node:crypto').randomBytes(48).toString('base64url'))"
 ```
 
-Store only the generated bcrypt hash in `OPERATOR_PASSWORD_HASH`; the plain password is used only to sign in. Never commit production values.
+Store the encoded hash in `OPERATOR_PASSWORD_HASH_B64`. The API decodes it in memory before bcrypt verification, avoiding Docker Compose `$` interpolation. The plain password is used only to sign in. Never commit production values.
 
 ## Local Test Stack
 
@@ -30,9 +32,9 @@ The ignored `.env.test` file contains disposable credentials for local verificat
 - URL: `http://127.0.0.1:18080`
 
 ```powershell
-docker compose --env-file .env.test -p restaurant -f infra/compose.yaml up -d --build --wait
-docker compose --env-file .env.test -p restaurant -f infra/compose.yaml ps
-docker compose --env-file .env.test -p restaurant -f infra/compose.yaml down
+docker compose --project-directory . --env-file .env.test -p restaurant -f infra/compose.yaml -f infra/compose.local.yaml up -d --build --wait
+docker compose --project-directory . --env-file .env.test -p restaurant -f infra/compose.yaml ps
+docker compose --project-directory . --env-file .env.test -p restaurant -f infra/compose.yaml down
 ```
 
 The final command preserves database volumes. Add `--volumes` only when intentionally deleting all local data.

@@ -46,7 +46,7 @@ Chain strategy: N/A — local-only; decide before future Git delivery
 
 - [x] 3.1 **Unit 5 (RED→GREEN→REFACTOR):** Test `auth/{auth.service,auth.controller,operator.guard}.ts` and `orders/transition.service.ts`; secure cookie/protected transitions for authenticated, unauthenticated, valid, and invalid-transition scenarios.
   - Verified bcrypt-backed static login, 15-minute HS256 session cookie, absent/invalid/expired guard rejection, forward/cancel transition rules, expected-state atomic update, history append, status outbox, and no writes for invalid/stale transitions.
-  - Security remediation verified required non-empty `OPERATOR_USERNAME`, `OPERATOR_PASSWORD_HASH`, and `JWT_SECRET` configuration plus mandatory Compose interpolation without repository secrets.
+  - Security remediation verified required non-empty `OPERATOR_USERNAME`, `OPERATOR_PASSWORD_HASH_B64`, and `JWT_SECRET` configuration plus mandatory Compose interpolation without repository secrets.
   - DI remediation verified dedicated `AUTH_CONFIG` token/factory wiring, mandatory `AuthService` injection, and real-module failure when auth configuration is missing.
   - Native Mongo transaction evidence remains unavailable; focused Unit 5 tests use session mocks only and do not claim real Mongo evidence.
 - [ ] 3.2 **Unit 6 (RED→GREEN→REFACTOR):** Test `projections/{cassandra.provider,cql.bootstrap,projection.worker,projection.controller}.ts`; prepared reads, lease/replay, duplicate, outage, and status scenarios without `ALLOW FILTERING`.

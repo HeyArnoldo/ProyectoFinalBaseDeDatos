@@ -277,7 +277,7 @@ Tres columnas: Integridad, Recuperación y Alcance. Terminar con la frase centra
 
 ### Antes de entrar al aula
 
-- [ ] Ejecutar `docker compose -f infra/compose.yaml up -d --build`.
+- [ ] Ejecutar `docker compose --project-directory . -f infra/compose.yaml -f infra/compose.local.yaml up -d --build`.
 - [ ] Confirmar que los cuatro contenedores están sanos.
 - [ ] Verificar que el catálogo semilla tenga productos activos.
 - [ ] Capturar las cuatro pantallas reales en `assets/presentacion/` con los nombres indicados en la diapositiva 6.

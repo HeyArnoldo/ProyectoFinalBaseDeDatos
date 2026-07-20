@@ -9,7 +9,7 @@ const { buildFixtureFilter } = require('./mongo-catalog.fixture.cjs');
 
 const projectRoot = resolve(dirname(fileURLToPath(import.meta.url)), '../../..');
 const composeFile = resolve(projectRoot, 'infra/compose.yaml');
-const composeArgs = ['compose', '-f', composeFile];
+const composeArgs = ['compose', '--project-directory', projectRoot, '-f', composeFile];
 const restaurantId = '11111111-1111-4111-8111-111111111111';
 const fixture = {
   _id: 'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee',

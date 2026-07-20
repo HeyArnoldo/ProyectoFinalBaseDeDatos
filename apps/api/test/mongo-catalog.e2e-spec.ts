@@ -22,9 +22,9 @@ const UUID_V4_PATTERN =
   '^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$';
 
 async function expectAppModuleError(message: string, configureMongo: () => void): Promise<void> {
-  const names = ['MONGODB_URI', 'MONGODB_DATABASE', 'OPERATOR_USERNAME', 'OPERATOR_PASSWORD_HASH', 'JWT_SECRET'] as const;
+  const names = ['MONGODB_URI', 'MONGODB_DATABASE', 'OPERATOR_USERNAME', 'OPERATOR_PASSWORD_HASH_B64', 'JWT_SECRET'] as const;
   const original = new Map(names.map((name) => [name, process.env[name]]));
-  Object.assign(process.env, { OPERATOR_USERNAME: 'test-operator', OPERATOR_PASSWORD_HASH: 'test-bcrypt-hash', JWT_SECRET: 'test-jwt-secret' });
+  Object.assign(process.env, { OPERATOR_USERNAME: 'test-operator', OPERATOR_PASSWORD_HASH_B64: 'JDJiJDEyJFplaFc4cWl6OFljQ2ZsV2NSSG1tRGVucHZUdUpxMlhxZ3kyZjRGUzE2L0hSSTMxMkpGVHR5', JWT_SECRET: 'test-jwt-secret' });
   configureMongo();
   try {
     await expect(

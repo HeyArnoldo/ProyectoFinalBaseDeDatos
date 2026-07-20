@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 
 const projectRoot = resolve(dirname(fileURLToPath(import.meta.url)), '../../..');
 const composeFile = resolve(projectRoot, 'infra/compose.yaml');
-const composeArgs = ['compose', '-p', 'infra', '-f', composeFile];
+const composeArgs = ['compose', '--project-directory', projectRoot, '-p', 'infra', '-f', composeFile];
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
 
 export type ProjectionEventFixture = {
@@ -52,7 +52,7 @@ function runDocker(...args: string[]): string {
       env: {
         ...process.env,
         OPERATOR_USERNAME: process.env.OPERATOR_USERNAME || 'e2e-fixture-cleanup',
-        OPERATOR_PASSWORD_HASH: process.env.OPERATOR_PASSWORD_HASH || 'e2e-fixture-cleanup',
+        OPERATOR_PASSWORD_HASH_B64: process.env.OPERATOR_PASSWORD_HASH_B64 || Buffer.from('e2e-fixture-cleanup').toString('base64'),
         JWT_SECRET: process.env.JWT_SECRET || 'e2e-fixture-cleanup',
       },
     });

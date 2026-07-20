@@ -41,8 +41,8 @@ Cada ejecución registra:
 La interfaz principal de ejecución es:
 
 \begin{lstlisting}[caption={Secuencia para levantar y evaluar el entorno}]
-docker compose -f infra/compose.yaml up -d --build
-docker compose -f infra/compose.yaml ps
+docker compose --project-directory . -f infra/compose.yaml -f infra/compose.local.yaml up -d --build
+docker compose --project-directory . -f infra/compose.yaml ps
 node evidence/run.mjs
 \end{lstlisting}
 

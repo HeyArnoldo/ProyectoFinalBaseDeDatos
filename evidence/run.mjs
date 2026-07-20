@@ -7,7 +7,7 @@ const root = resolve(import.meta.dirname, '..');
 const configuredRunId = process.env.EVIDENCE_RUN_ID ?? new Date().toISOString().replace(/[:.]/g, '-');
 const runId = configuredRunId.replace(/[^a-zA-Z0-9_-]/g, '-').replace(/^-+|-+$/g, '') || 'runtime';
 const output = resolve(root, 'evidence', runId);
-const composeCommand = 'docker compose -p infra -f infra/compose.yaml';
+const composeCommand = 'docker compose --project-directory . -p infra -f infra/compose.yaml';
 const declaredCommands = [
   { name: 'focusedWebTests', command: 'pnpm --filter @app/web run test' },
   { name: 'fullTests', command: 'pnpm test' },

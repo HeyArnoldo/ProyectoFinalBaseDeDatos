@@ -28,11 +28,11 @@ const CONFIG: AuthConfig = {
 };
 const transitionMock = { transition: jest.fn().mockResolvedValue({ orderId: ORDER_ID, status: 'CONFIRMED' }) };
 const checkoutMock = { checkout: jest.fn() };
-const REQUIRED_AUTH_ENV = ['OPERATOR_USERNAME', 'OPERATOR_PASSWORD_HASH', 'JWT_SECRET'] as const;
+const REQUIRED_AUTH_ENV = ['OPERATOR_USERNAME', 'OPERATOR_PASSWORD_HASH_B64', 'JWT_SECRET'] as const;
 const originalAuthEnv = new Map(REQUIRED_AUTH_ENV.map((name) => [name, process.env[name]]));
 
 describe('auth configuration safety', () => {
-  beforeEach(() => Object.assign(process.env, { OPERATOR_USERNAME: 'configured-operator', OPERATOR_PASSWORD_HASH: 'configured-bcrypt-hash', JWT_SECRET: 'configured-jwt-secret' }));
+  beforeEach(() => Object.assign(process.env, { OPERATOR_USERNAME: 'configured-operator', OPERATOR_PASSWORD_HASH_B64: Buffer.from(CONFIG.passwordHash).toString('base64'), JWT_SECRET: 'configured-jwt-secret' }));
   afterEach(() => REQUIRED_AUTH_ENV.forEach((name) => originalAuthEnv.get(name) === undefined ? delete process.env[name] : process.env[name] = originalAuthEnv.get(name)));
 
   it.each(REQUIRED_AUTH_ENV)('fails deterministically when %s is missing', (missing) => {
@@ -41,7 +41,11 @@ describe('auth configuration safety', () => {
   });
 
   it.each(REQUIRED_AUTH_ENV)('rejects blank %s', (blank) => { process.env[blank] = ' '; expect(() => loadAuthConfig()).toThrow(`${blank} is required`); });
-  it('passes configured values through without defaults', () => expect(loadAuthConfig()).toEqual({ username: 'configured-operator', passwordHash: 'configured-bcrypt-hash', jwtSecret: 'configured-jwt-secret' }));
+  it('decodes the configured bcrypt hash without defaults', () => expect(loadAuthConfig()).toEqual({ username: 'configured-operator', passwordHash: CONFIG.passwordHash, jwtSecret: 'configured-jwt-secret' }));
+  it('rejects a base64 value that is not a bcrypt hash', () => {
+    process.env.OPERATOR_PASSWORD_HASH_B64 = Buffer.from('not-a-bcrypt-hash').toString('base64');
+    expect(() => loadAuthConfig()).toThrow('OPERATOR_PASSWORD_HASH_B64 must contain a base64-encoded bcrypt hash');
+  });
 
   it('wires AuthConfig through a dedicated mandatory token instead of Object metadata', () => {
     const providers = Reflect.getMetadata('providers', AuthModule) as unknown[];
@@ -56,7 +60,7 @@ describe('auth configuration safety', () => {
 
   it('requires all auth settings in the API Compose environment without repository secrets', () => {
     const compose = readFileSync(join(__dirname, '../../../infra/compose.yaml'), 'utf8');
-    for (const line of ['OPERATOR_USERNAME: "${OPERATOR_USERNAME:?OPERATOR_USERNAME is required}"', 'OPERATOR_PASSWORD_HASH: "${OPERATOR_PASSWORD_HASH:?OPERATOR_PASSWORD_HASH is required}"', 'JWT_SECRET: "${JWT_SECRET:?JWT_SECRET is required}"']) expect(compose).toContain(line);
+    for (const line of ['OPERATOR_USERNAME: "${OPERATOR_USERNAME:?OPERATOR_USERNAME is required}"', 'OPERATOR_PASSWORD_HASH_B64: "${OPERATOR_PASSWORD_HASH_B64:?OPERATOR_PASSWORD_HASH_B64 is required}"', 'JWT_SECRET: "${JWT_SECRET:?JWT_SECRET is required}"']) expect(compose).toContain(line);
   });
 });
 

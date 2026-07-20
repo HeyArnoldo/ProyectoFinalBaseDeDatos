@@ -1,13 +1,13 @@
 services:
   web:
     build:
-      context: ..
+      context: .
       dockerfile: apps/web/Dockerfile
     mem_limit: 96m
     environment:
       SERVICE_FQDN_WEB_80: "${SERVICE_FQDN_WEB_80:-https://restaurante.cloud.groowtech.com}"
-    ports:
-      - "${WEB_BIND_ADDRESS:-127.0.0.1}:${WEB_PORT:-8080}:80"
+    expose:
+      - "80"
     depends_on:
       api:
         condition: service_healthy
@@ -25,7 +25,7 @@ services:
         max-file: "3"
   api:
     build:
-      context: ..
+      context: .
       dockerfile: apps/api/Dockerfile
     mem_limit: 384m
     environment:
@@ -36,7 +36,7 @@ services:
       CASSANDRA_LOCAL_DATACENTER: datacenter1
       CASSANDRA_PORT: "9042"
       OPERATOR_USERNAME: "${OPERATOR_USERNAME:?OPERATOR_USERNAME is required}"
-      OPERATOR_PASSWORD_HASH: "${OPERATOR_PASSWORD_HASH:?OPERATOR_PASSWORD_HASH is required}"
+      OPERATOR_PASSWORD_HASH_B64: "${OPERATOR_PASSWORD_HASH_B64:?OPERATOR_PASSWORD_HASH_B64 is required}"
       JWT_SECRET: "${JWT_SECRET:?JWT_SECRET is required}"
     depends_on:
       mongodb:
@@ -61,7 +61,7 @@ services:
     mem_limit: 1536m
     volumes:
       - mongodb_data:/data/db
-      - ./mongodb/healthcheck.js:/healthcheck.js:ro
+      - ./infra/mongodb/healthcheck.js:/healthcheck.js:ro
     healthcheck:
       test: ["CMD", "mongosh", "--quiet", "mongodb://127.0.0.1:27017/admin", "/healthcheck.js"]
       interval: 5s

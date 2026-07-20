@@ -12,7 +12,16 @@ export type OperatorPrincipal = { sub: string; role: 'operator' };
 
 function requiredAuthEnv(name: string): string { const value = process.env[name]?.trim(); if (!value) throw new Error(`${name} is required`); return value; }
 
-export function loadAuthConfig(): AuthConfig { return { username: requiredAuthEnv('OPERATOR_USERNAME'), passwordHash: requiredAuthEnv('OPERATOR_PASSWORD_HASH'), jwtSecret: requiredAuthEnv('JWT_SECRET') }; }
+function requiredPasswordHash(): string {
+  const encoded = requiredAuthEnv('OPERATOR_PASSWORD_HASH_B64');
+  const passwordHash = Buffer.from(encoded, 'base64').toString('utf8');
+  if (!/^\$2[aby]\$\d{2}\$[./A-Za-z0-9]{53}$/.test(passwordHash)) {
+    throw new Error('OPERATOR_PASSWORD_HASH_B64 must contain a base64-encoded bcrypt hash');
+  }
+  return passwordHash;
+}
+
+export function loadAuthConfig(): AuthConfig { return { username: requiredAuthEnv('OPERATOR_USERNAME'), passwordHash: requiredPasswordHash(), jwtSecret: requiredAuthEnv('JWT_SECRET') }; }
 
 @Injectable()
 export class AuthService {

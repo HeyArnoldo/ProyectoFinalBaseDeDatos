@@ -44,9 +44,12 @@ describe('local runtime topology', () => {
       expect(readService(compose, service)).toContain(`mem_limit: ${memory}`);
     }
 
-    expect(readService(compose, 'web')).toContain(
-      '- "${WEB_BIND_ADDRESS:-127.0.0.1}:${WEB_PORT:-8080}:80"',
-    );
+    expect(readService(compose, 'web')).toContain('context: .');
+    expect(readService(compose, 'api')).toContain('context: .');
+    expect(readService(compose, 'web')).toContain('expose:');
+    expect(readService(compose, 'web')).toContain('- "80"');
+    expect(readService(compose, 'web')).not.toMatch(/^    ports:/m);
+    expect(readProjectFile('infra/compose.local.yaml')).toContain('- "${WEB_BIND_ADDRESS:-127.0.0.1}:${WEB_PORT:-8080}:80"');
     expect(readService(compose, 'web')).toContain(
       'SERVICE_FQDN_WEB_80: "${SERVICE_FQDN_WEB_80:-https://restaurante.cloud.groowtech.com}"',
     );
@@ -73,6 +76,7 @@ describe('local runtime topology', () => {
       /mongodb:\s*\n\s+condition: service_healthy[\s\S]*cassandra:\s*\n\s+condition: service_healthy/,
     );
     expect(readService(compose, 'mongodb')).toContain('mongodb_data:/data/db');
+    expect(readService(compose, 'mongodb')).toContain('./infra/mongodb/healthcheck.js:/healthcheck.js:ro');
     expect(readService(compose, 'cassandra')).toContain(
       'cassandra_data:/var/lib/cassandra',
     );

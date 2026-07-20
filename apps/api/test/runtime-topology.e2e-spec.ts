@@ -76,6 +76,7 @@ describe('local runtime topology', () => {
       /mongodb:\s*\n\s+condition: service_healthy[\s\S]*cassandra:\s*\n\s+condition: service_healthy/,
     );
     expect(readService(compose, 'mongodb')).toContain('mongodb_data:/data/db');
+    expect(readService(compose, 'mongodb')).toContain('hostname: mongodb');
     expect(readService(compose, 'mongodb')).toContain('./infra/mongodb/healthcheck.js:/healthcheck.js:ro');
     expect(readService(compose, 'cassandra')).toContain(
       'cassandra_data:/var/lib/cassandra',
@@ -88,6 +89,9 @@ describe('local runtime topology', () => {
     );
     expect(readProjectFile('infra/mongodb/healthcheck.js')).toContain(
       'replSetGetStatus',
+    );
+    expect(readProjectFile('infra/mongodb/healthcheck.js')).toContain(
+      "rs.reconfig(config, { force: true })",
     );
     expect(readService(compose, 'cassandra')).toMatch(/cqlsh[\s\S]*SELECT release_version/);
     expect(compose).not.toMatch(/^    internal: true$/m);

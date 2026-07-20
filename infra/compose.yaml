@@ -56,13 +56,14 @@ services:
         max-size: 10m
         max-file: "3"
   mongodb:
-    image: mongo:8.0
+    build:
+      context: .
+      dockerfile: infra/mongodb/Dockerfile
     hostname: mongodb
     command: ["mongod", "--replSet", "rs0", "--bind_ip_all", "--wiredTigerCacheSizeGB", "0.5"]
     mem_limit: 1536m
     volumes:
       - mongodb_data:/data/db
-      - ./infra/mongodb/healthcheck.js:/healthcheck.js:ro
     healthcheck:
       test: ["CMD", "mongosh", "--quiet", "mongodb://127.0.0.1:27017/admin", "/healthcheck.js"]
       interval: 5s

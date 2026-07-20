@@ -77,7 +77,8 @@ describe('local runtime topology', () => {
     );
     expect(readService(compose, 'mongodb')).toContain('mongodb_data:/data/db');
     expect(readService(compose, 'mongodb')).toContain('hostname: mongodb');
-    expect(readService(compose, 'mongodb')).toContain('./infra/mongodb/healthcheck.js:/healthcheck.js:ro');
+    expect(readService(compose, 'mongodb')).toContain('dockerfile: infra/mongodb/Dockerfile');
+    expect(readService(compose, 'mongodb')).not.toMatch(/healthcheck\.js:\/healthcheck\.js/);
     expect(readService(compose, 'cassandra')).toContain(
       'cassandra_data:/var/lib/cassandra',
     );
@@ -100,6 +101,7 @@ describe('local runtime topology', () => {
   it('declares multi-stage images and deterministic web/API health paths', () => {
     const apiDockerfile = readProjectFile('apps/api/Dockerfile');
     const webDockerfile = readProjectFile('apps/web/Dockerfile');
+    const mongoDockerfile = readProjectFile('infra/mongodb/Dockerfile');
     const nginx = readProjectFile('apps/web/nginx.conf');
 
     expect(apiDockerfile).toMatch(/FROM node:22-alpine AS base/);
@@ -111,6 +113,8 @@ describe('local runtime topology', () => {
     expect(webDockerfile).toMatch(/FROM nginx:.* AS runtime/);
     expect(webDockerfile).toContain('COPY apps/web/src apps/web/src');
     expect(webDockerfile).not.toContain('COPY apps/web apps/web');
+    expect(mongoDockerfile).toContain('FROM mongo:8.0');
+    expect(mongoDockerfile).toContain('COPY --chmod=0444 infra/mongodb/healthcheck.js /healthcheck.js');
     expect(nginx).toContain('location /api/');
     expect(nginx).toContain('proxy_pass http://api:3000;');
     expect(nginx).toContain('location = /api/health');

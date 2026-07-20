@@ -1,0 +1,456 @@
+{
+  "schemaVersion": 2,
+  "runId": "unit-10-final-2026-07-19",
+  "generatedAt": "2026-07-19T08:01:17.584Z",
+  "commit": "e0aa4e0",
+  "node": "v24.15.0",
+  "project": "infra",
+  "composeFile": "infra/compose.yaml",
+  "commands": [
+    {
+      "name": "focusedWebTests",
+      "command": "pnpm --filter @app/web run test",
+      "exitCode": 0,
+      "durationMs": 12225,
+      "stdoutHash": "30b6e5c7a304fd57ecd2fd4e72fbfc6632da4cb40c4282b38aca33cbc310d58f",
+      "stderrHash": "cb7efe2ed065b3202856f854f1645179984b659249d4ea99dde8467ed4a4b173",
+      "stdoutBytes": 256,
+      "stderrBytes": 13,
+      "spawnError": false
+    },
+    {
+      "name": "fullTests",
+      "command": "pnpm test",
+      "exitCode": 0,
+      "durationMs": 31241,
+      "stdoutHash": "896a885f68ff48eb91e22a9fb6b65a773a440c72082d2275de02daae8f89b7e9",
+      "stderrHash": "c751a69d241da4aa95ff6eead838c521c1920ad706dd9ec6dbd2e837bc7949a1",
+      "stdoutBytes": 256,
+      "stderrBytes": 335,
+      "spawnError": false
+    },
+    {
+      "name": "typecheck",
+      "command": "pnpm typecheck",
+      "exitCode": 0,
+      "durationMs": 10303,
+      "stdoutHash": "e94045e5bb6da96208b55555b54352d959210268790dcf714edc0082f5ef1cba",
+      "stderrHash": "5f4e8cc6357cefc741b3a602e29a1ff25113a452f8eb55da8e072868a898984e",
+      "stdoutBytes": 363,
+      "stderrBytes": 24,
+      "spawnError": false
+    },
+    {
+      "name": "build",
+      "command": "pnpm build",
+      "exitCode": 0,
+      "durationMs": 8969,
+      "stdoutHash": "6aef628f7e54a9ec090c0b1072dbee0e4f5d61569bd93d61faa546a8fa40066b",
+      "stderrHash": "87ef89fc66b05699d57e3ebddbffde3a78201a046aaf664157c21cee3842d2df",
+      "stdoutBytes": 1153,
+      "stderrBytes": 20,
+      "spawnError": false
+    },
+    {
+      "name": "dockerCatalog",
+      "command": "pnpm test:docker",
+      "exitCode": 0,
+      "durationMs": 4349,
+      "stdoutHash": "3b18fae19012dc9c086afea1e5b2bfaa94802a6f3d5a0435446105d0e8af040e",
+      "stderrHash": "8f290d9210047a745b6c5654f93fc6075dc65275c760cc9a27029850fb506d3a",
+      "stdoutBytes": 51,
+      "stderrBytes": 143,
+      "spawnError": false
+    },
+    {
+      "name": "e2e",
+      "command": "pnpm test:e2e",
+      "exitCode": 0,
+      "durationMs": 39499,
+      "stdoutHash": "95d257633c68a99369f8f14a2506782afba6e206ee8d054cc7b373147dfb377d",
+      "stderrHash": "29c8cb3def8947328f10554b90e6c1d0cc0b6ba28e16e3a3e931a32408ba44ba",
+      "stdoutBytes": 2623,
+      "stderrBytes": 56,
+      "spawnError": false
+    },
+    {
+      "name": "diffCheck",
+      "command": "git diff --check",
+      "exitCode": 0,
+      "durationMs": 111,
+      "stdoutHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderrHash": "64375a99571ba1dce6bfb0ca48013403fed98f01c8cef2ab61d8979ea35722c8",
+      "stdoutBytes": 0,
+      "stderrBytes": 6715,
+      "spawnError": false
+    },
+    {
+      "name": "composeTopology",
+      "command": "docker compose -p infra -f infra/compose.yaml ps --format json",
+      "exitCode": 0,
+      "durationMs": 265,
+      "stdoutHash": "55af1721976439d404fbc130a1b3ba8b6d099946e0ca75a395b836862e9d01f0",
+      "stderrHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdoutBytes": 5635,
+      "stderrBytes": 0,
+      "spawnError": false
+    },
+    {
+      "name": "composeServices",
+      "command": "docker compose -p infra -f infra/compose.yaml config --services",
+      "exitCode": 0,
+      "durationMs": 154,
+      "stdoutHash": "f321f328869ce2f01ad76e4f88d125cb7bd4487f836e77cb86b2e0d85096be37",
+      "stderrHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdoutBytes": 26,
+      "stderrBytes": 0,
+      "spawnError": false
+    },
+    {
+      "name": "composeStats",
+      "command": "docker compose -p infra -f infra/compose.yaml stats --no-stream --format json",
+      "exitCode": 0,
+      "durationMs": 2322,
+      "stdoutHash": "86191b33c58671225ca56f2d2d6d5907755cfff0c1495eaf9afdd9f6bccb83b1",
+      "stderrHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdoutBytes": 1012,
+      "stderrBytes": 0,
+      "spawnError": false
+    }
+  ],
+  "provenance": {
+    "dirty": true,
+    "statusHash": "259d83eb3d08e61c2403eb6ba0e3a0f8c5cfc2a05618c2d27d885ee4d009f0dd",
+    "diffHash": "2910494c7cd88b82364da977d0bcf95e3cb0cc9be5961b1732fbcc60fcf4d154",
+    "stagedDiffHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "contentHash": "af6e28f5262ecabbae237a83f12b422a628996284fae206f5f316ce269abd738",
+    "contentFiles": [
+      {
+        "path": ".gitignore",
+        "sha256": "63f4abf0ae3943877b5a3df879b76e5cf13fdede05b4af5848002a4e279ecc6a"
+      },
+      {
+        "path": "apps/api/package.json",
+        "sha256": "fd3d2afb1e3d0fd3d0c03b8130be9fda093cb6e0c7723649b112d75f440f3d27"
+      },
+      {
+        "path": "apps/api/src/app.module.ts",
+        "sha256": "a89336dd3f92474bee8a563bd8d480cd312e56190e7f877dfb1e529a65dea250"
+      },
+      {
+        "path": "apps/api/src/auth/auth.module.ts",
+        "sha256": "a2eea568e6078433d7b14f51ab9d7ceafa527ec3e560c522f45830acf9cd34f0"
+      },
+      {
+        "path": "apps/api/src/auth/auth.service.ts",
+        "sha256": "c46cf8f28293a3eae06bc982e2904f42e9c828eb57115e3d7dfc3a7ca4fab568"
+      },
+      {
+        "path": "apps/api/src/catalog/catalog.service.ts",
+        "sha256": "4ce242d1e7fbd22ead2f400bf493fa7bc968cf30f1f12e48f7211bd4eb2fc5dc"
+      },
+      {
+        "path": "apps/api/src/database/bootstrap.service.ts",
+        "sha256": "2fff4690da5e9adeb16b7cf88db041823e9ba819acc3f7e99096b78b567cecfb"
+      },
+      {
+        "path": "apps/api/src/database/seed.service.ts",
+        "sha256": "66479a4d7498bfa651cb1ddc3b9aca47ae1c60ac5bf05eb6ffc05f230f4a25f2"
+      },
+      {
+        "path": "apps/api/src/main.ts",
+        "sha256": "f33b44c956ed4fc89a7b5d1e5db37360904b609deeaabe9165e05af7f8d3ce1f"
+      },
+      {
+        "path": "apps/api/src/orders/checkout.service.ts",
+        "sha256": "a8ace07a5b709eba28b822c4abec187b3d32d574eeb788e6b3ef492beb2e4f8d"
+      },
+      {
+        "path": "apps/api/src/orders/operator-orders.service.ts",
+        "sha256": "0ed3ffe0ebb50120ab541fd58c40f7e2e68ccf72872c4c2e1fd4134b3ae85267"
+      },
+      {
+        "path": "apps/api/src/orders/order.types.ts",
+        "sha256": "461148bc1ec62f05795257c037678597917aef4a61409d68b5a45d127f486c6d"
+      },
+      {
+        "path": "apps/api/src/orders/orders.controller.ts",
+        "sha256": "60cc5b233dc240e64442b34a84fb5bd673320823e4b35279412439820f873ec4"
+      },
+      {
+        "path": "apps/api/src/orders/orders.module.ts",
+        "sha256": "0df709483c5bdd4095c290cbb84c21be31d5b4437a48155bf4f8da7fb4b77557"
+      },
+      {
+        "path": "apps/api/src/orders/transition.service.ts",
+        "sha256": "ee4cf8cbe64c062b2309a2eab6e71f9910cc00e3094af5f2a73d1328f45578b5"
+      },
+      {
+        "path": "apps/api/src/projections/cassandra.provider.ts",
+        "sha256": "5292fa515ea841fb8b2bb1967c27bf757e0e6e6d8a808ee4b6b06a82bcc4f2bf"
+      },
+      {
+        "path": "apps/api/src/projections/cql.bootstrap.ts",
+        "sha256": "c38c3d49e4bb528b96d02e52edb83743b79bc01060a147ef97ddd42e58dd0ff4"
+      },
+      {
+        "path": "apps/api/src/projections/projection.controller.ts",
+        "sha256": "3274bc44a9c279a574db8dc4ae908c554036f9e4bdc177f99a8d0c5245291a50"
+      },
+      {
+        "path": "apps/api/src/projections/projection.module.ts",
+        "sha256": "2e040e0262b69df3eaf0bec8eb6755a92137f70910c6ee5c6fe35fc7b361854e"
+      },
+      {
+        "path": "apps/api/src/projections/projection.worker.ts",
+        "sha256": "907db11c7408f86ec31ef7420f37d00a3d0740a63580caa59efca5e26bdcd528"
+      },
+      {
+        "path": "apps/api/test/auth-transition.e2e-spec.ts",
+        "sha256": "e9b438f10ea726dcbf5fdf5aad65ee3396b8f0c9cf56815a7ca5292a1e4dd3a2"
+      },
+      {
+        "path": "apps/api/test/mongo-catalog.docker.mjs",
+        "sha256": "7eb447197d4324e343876e152206fb6b7e56514214555fcceb848cf984061e3f"
+      },
+      {
+        "path": "apps/api/test/mongo-catalog.e2e-spec.ts",
+        "sha256": "8c6deb32ca9273e0820274ccdc28ca27b272f2624a1734fa4af993783c5c8652"
+      },
+      {
+        "path": "apps/api/test/operator-orders.e2e-spec.ts",
+        "sha256": "a32365d154626e6a937a5bc68e00b62d54e950fcfe0fdd9fe435740234413372"
+      },
+      {
+        "path": "apps/api/test/orders-checkout.e2e-spec.ts",
+        "sha256": "a304ac0ea70d96bba46997e5fc28e02751e7cae0f5c76f7a2d08bcd847967329"
+      },
+      {
+        "path": "apps/api/test/projection-worker-load.e2e-spec.ts",
+        "sha256": "f8e7c3d6938d5b5e9e4d7bf857de7787cc8e195b998eca25492b389342d44cb6"
+      },
+      {
+        "path": "apps/api/test/projections.e2e-spec.ts",
+        "sha256": "8de1610c2c1ef6f82e272d1d178dc6aea325652a0dc0704773a2cd2f9c1ff78e"
+      },
+      {
+        "path": "apps/api/test/runtime-topology.e2e-spec.ts",
+        "sha256": "9e0c50a5432e04057142521b27cf8e66cee966b74cd671cfc310790d94906e87"
+      },
+      {
+        "path": "apps/web/Dockerfile",
+        "sha256": "110d8d50dad6fac365fb8a65ba79c4dba5730c6b4346074065ae124ea28d9b49"
+      },
+      {
+        "path": "apps/web/e2e/restaurant-cleanup.spec.ts",
+        "sha256": "19b13849e00caa469d441df4c45c2eb326037c388e68a45ca87d2c47099b0d97"
+      },
+      {
+        "path": "apps/web/e2e/restaurant-cleanup.ts",
+        "sha256": "94d6359c576f7c823d9af325eb1b5c2a1dc33b80ce00553fe1450030ee3a920f"
+      },
+      {
+        "path": "apps/web/e2e/restaurant.spec.ts",
+        "sha256": "708af70bae1164241233488a5d6cdc4b80e289c53f0f54da19eabe93295210ed"
+      },
+      {
+        "path": "apps/web/index.html",
+        "sha256": "0a0efd7670cbb5957a3afecf5818e8f4e7fb76d03c9a38c65b2cd8d759364788"
+      },
+      {
+        "path": "apps/web/package.json",
+        "sha256": "3537ebda3d7f6502c04de200f355f5120ddfe8073a41be5ef34a7220f18c5e6a"
+      },
+      {
+        "path": "apps/web/playwright.config.ts",
+        "sha256": "c12898a57710493a9eb4d79c16741a290354fa0ddb660b652036afa28431fa01"
+      },
+      {
+        "path": "apps/web/src/app.tsx",
+        "sha256": "391e32af9610a2acc6c9f928e61c490131cc5f84d4d7be1119b2515167196da6"
+      },
+      {
+        "path": "apps/web/src/app/api.ts",
+        "sha256": "22d38efc6efa9f7769fdee4c5e19f2a7e5e10f0f82a2926e8f86e003e6f60228"
+      },
+      {
+        "path": "apps/web/src/app/cart.test.ts",
+        "sha256": "f607b4b0062a8cfe2c7caf2ce03b7e13481ffc507acdaf081bfb1a9d37a1faac"
+      },
+      {
+        "path": "apps/web/src/app/cart.tsx",
+        "sha256": "7e1ae256a5f35f83c3bb49051cbbb4bb155d178f578b9becd362c287d5fe2030"
+      },
+      {
+        "path": "apps/web/src/app/catalog.ts",
+        "sha256": "2f9e80e9087a953f55e1ec21fce3571c76382a347fef3ebef0eaf93147f4daf9"
+      },
+      {
+        "path": "apps/web/src/app/operator-config.ts",
+        "sha256": "c6de5843c46075522172c2663313a9e5ac0b35c505e9f5b9f4a79e38de362938"
+      },
+      {
+        "path": "apps/web/src/app/providers.tsx",
+        "sha256": "e98bd40c8ac1c0c7c8ab5b20b8024b09102ac6972017abf2905b75d08bee5db9"
+      },
+      {
+        "path": "apps/web/src/app/router.tsx",
+        "sha256": "ac92bc7fac5787383f7e4390759942365f06f1a754d355b4754f76b9c0345f8a"
+      },
+      {
+        "path": "apps/web/src/components/cart-sheet.tsx",
+        "sha256": "82d0e6196919785a680c36bd864f488a7ca981d4b838115c6e0f3b5288bcb9a3"
+      },
+      {
+        "path": "apps/web/src/components/primitives.tsx",
+        "sha256": "33c9687b48974987287171dd537c2c94ae467dd1b72ff0c097ccb6b1509e2fdf"
+      },
+      {
+        "path": "apps/web/src/components/product-artwork.tsx",
+        "sha256": "0ab3c079127e160b7b34824b38e33c09d96eca8f5b2dd828598f0878207e403c"
+      },
+      {
+        "path": "apps/web/src/main.tsx",
+        "sha256": "141147ea74c8101a3a49d99560ed24237274415191f8a3e55d4a32673795dc98"
+      },
+      {
+        "path": "apps/web/src/operator-dashboard.test.tsx",
+        "sha256": "064704ddac7cfa7f17ba66379c521bdd3f8a55edb6d326d0885dd49d9e834a94"
+      },
+      {
+        "path": "apps/web/src/operator/login-page.tsx",
+        "sha256": "7cfc3e26c983b7186ae24adea54373724907d5f8095b2d7373e7a92c99c7cda4"
+      },
+      {
+        "path": "apps/web/src/operator/operator-common.tsx",
+        "sha256": "5e07545f01244d34f1c19a5b11745326204d3340816e4f410bcbb4ce58712edd"
+      },
+      {
+        "path": "apps/web/src/operator/operator-routes.tsx",
+        "sha256": "337995fe79b8a8f28810d722d8509ffea1f42ba62a1023b52e6a4a76fcdbac68"
+      },
+      {
+        "path": "apps/web/src/operator/orders-board-page.tsx",
+        "sha256": "b0b7580fb212beb3cc0074b915ae3f40098baf620181696308d78d76a4c50762"
+      },
+      {
+        "path": "apps/web/src/operator/projection-board-page.tsx",
+        "sha256": "6be3e8e3261e930c64274443623c27f16e8db21e09217e37c1dca75715cadef8"
+      },
+      {
+        "path": "apps/web/src/pages/catalog-page.tsx",
+        "sha256": "77c14e4fed4a97c24cde6a4e65ec8f31c66ac02a4423cdc87439a3b5e941052c"
+      },
+      {
+        "path": "apps/web/src/pages/checkout-page.tsx",
+        "sha256": "8fab78f70f0ad5f410dfe7065225c2a00fabf7d7b0d09f8de173d1c3af52ae96"
+      },
+      {
+        "path": "apps/web/src/pages/confirmation-page.tsx",
+        "sha256": "7d7430a31ed7a78ac7f89a2b1dc5f7a46929d7746e5ef016d7cabbcbeaeb2b05"
+      },
+      {
+        "path": "apps/web/src/public-ordering.test.tsx",
+        "sha256": "f53726376cdf00281fdad94adc0403548e4fd47a9aa442f9c2c56bbe9cd91dfd"
+      },
+      {
+        "path": "apps/web/src/styles.css",
+        "sha256": "5c8a945f6a8c7d0ddbb88a124d07bf6338249c452a8077a985e7b043db177d9c"
+      },
+      {
+        "path": "apps/web/test/setup.ts",
+        "sha256": "268e7200d092daa3225eb06790ed72842e5d3234a53980c90ff463d7b81528d3"
+      },
+      {
+        "path": "apps/web/tsconfig.json",
+        "sha256": "afe643e337b3d8fa7394cd7179d48d37c8d71b2c1600ab54babb1e1c366bd323"
+      },
+      {
+        "path": "apps/web/vite.config.ts",
+        "sha256": "7db835c4b028bcee2023e51b0f8178d385e3c0aeb68670dd3561925ef6d73bf5"
+      },
+      {
+        "path": "apps/web/vitest.config.ts",
+        "sha256": "19ade346a554145f9744c98edac3bc4e25d3100b766f7edaeca31dd41c5228e0"
+      },
+      {
+        "path": "evidence/run.mjs",
+        "sha256": "7bc1aef707eee3e98e41409115f11df2b55166d5d3d879291dc904a623c19a25"
+      },
+      {
+        "path": "infra/compose.yaml",
+        "sha256": "a95bfd9df716baeeddb66233265ae525e02eae063eb8f583bbe4a455bfe8ea41"
+      },
+      {
+        "path": "package.json",
+        "sha256": "d9b392355f7b610a915392839d948aee5669b4d38b0f97f6791e478431d0b3d9"
+      },
+      {
+        "path": "packages/contracts/package.json",
+        "sha256": "54c20bdf5e432a826477c6756869259bff8a3f57b57b113069eb2e4cf3b1936a"
+      },
+      {
+        "path": "packages/contracts/src/index.ts",
+        "sha256": "646dd7d4f4c306771657bb0b717235a505ff44258f8a9c384e8632776d7ca988"
+      },
+      {
+        "path": "pnpm-lock.yaml",
+        "sha256": "5c8567e4fda62fcb9671f95671df6b744e3a22b97b4b17e500b598fc5246f38b"
+      }
+    ],
+    "provenanceCommandsPassed": true
+  },
+  "uiArtifacts": {
+    "files": [
+      {
+        "path": "ui/operator-orders-chromium-desktop.axe.json",
+        "sha256": "9308b466bd85377f85a13bfe1971460d5338ca27c0c6fc12f6914a4f779d6306"
+      },
+      {
+        "path": "ui/operator-orders-chromium-desktop.png",
+        "sha256": "da4221711c608959397bb47c25245a48309a9aada725b55a100e97fd96986bee"
+      },
+      {
+        "path": "ui/operator-orders-chromium-mobile.axe.json",
+        "sha256": "a52fe20fbf579a3c6336b8c9ec9e2e72c797e62cac35f704769bfe55712545c3"
+      },
+      {
+        "path": "ui/operator-orders-chromium-mobile.png",
+        "sha256": "7a43ede2b55ed2f4374f1db8cdb05e06372a48f0fe3e8af02780d7654e1e87af"
+      },
+      {
+        "path": "ui/operator-projection-chromium-desktop.axe.json",
+        "sha256": "c81a03f0451846fb543d98b886c42ac9136070059080988228ac73a5ffb9630a"
+      },
+      {
+        "path": "ui/operator-projection-chromium-desktop.png",
+        "sha256": "55e8e84b36e748a391de826b0bfa562ce5b32c8b88e36d69e5346a8bdf2abce1"
+      },
+      {
+        "path": "ui/operator-projection-chromium-mobile.axe.json",
+        "sha256": "c81a03f0451846fb543d98b886c42ac9136070059080988228ac73a5ffb9630a"
+      },
+      {
+        "path": "ui/operator-projection-chromium-mobile.png",
+        "sha256": "7f0482e549a4d60d7cc5754719ad2984333cf3a93a92b0956987613f66024aba"
+      },
+      {
+        "path": "ui/public-confirmation-chromium-desktop.axe.json",
+        "sha256": "fa3c0c5be2ce323d8c2cbd56aaedbf9f6bc1ac19e906794255d65863e6d8b96e"
+      },
+      {
+        "path": "ui/public-confirmation-chromium-desktop.png",
+        "sha256": "ba0793cd675fe9ff4bb8b9afa37f9c90471a980b1794072f6286bbdb55926bb9"
+      },
+      {
+        "path": "ui/public-confirmation-chromium-mobile.axe.json",
+        "sha256": "fa3c0c5be2ce323d8c2cbd56aaedbf9f6bc1ac19e906794255d65863e6d8b96e"
+      },
+      {
+        "path": "ui/public-confirmation-chromium-mobile.png",
+        "sha256": "a12c18df7621cf6a1f3a389904fabdda6786a330733f0899844ab93071cd208e"
+      }
+    ],
+    "hash": "4c1e3f8312e13f2164e2cbc0b3550c16f4944e25bd8028d03bd46a0d23f67a6c"
+  }
+}

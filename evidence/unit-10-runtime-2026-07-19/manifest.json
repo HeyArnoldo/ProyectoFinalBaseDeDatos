@@ -1,0 +1,128 @@
+{
+  "schemaVersion": 2,
+  "runId": "unit-10-runtime-2026-07-19",
+  "generatedAt": "2026-07-19T06:42:19.535Z",
+  "commit": "e0aa4e0",
+  "node": "v24.15.0",
+  "project": "infra",
+  "composeFile": "infra/compose.yaml",
+  "commands": [
+    {
+      "name": "focusedWebTests",
+      "command": "pnpm --filter @app/web run test",
+      "exitCode": 0,
+      "durationMs": 12569,
+      "stdoutHash": "3701f928c33d84ffecfade792708f767b5e7f368565efce76d52edafa46c5db3",
+      "stderrHash": "cb7efe2ed065b3202856f854f1645179984b659249d4ea99dde8467ed4a4b173",
+      "stdoutBytes": 256,
+      "stderrBytes": 13,
+      "spawnError": false
+    },
+    {
+      "name": "fullTests",
+      "command": "pnpm test",
+      "exitCode": 0,
+      "durationMs": 32458,
+      "stdoutHash": "bb54dd959f36e4868bb4828c068526f5d51d946d5c92605ec553192411fb0166",
+      "stderrHash": "0c2c1b5c56a3ae4f8719278827a3257663c4ce356495d0345f34e25510b87396",
+      "stdoutBytes": 256,
+      "stderrBytes": 319,
+      "spawnError": false
+    },
+    {
+      "name": "typecheck",
+      "command": "pnpm typecheck",
+      "exitCode": 0,
+      "durationMs": 9634,
+      "stdoutHash": "e94045e5bb6da96208b55555b54352d959210268790dcf714edc0082f5ef1cba",
+      "stderrHash": "5f4e8cc6357cefc741b3a602e29a1ff25113a452f8eb55da8e072868a898984e",
+      "stdoutBytes": 363,
+      "stderrBytes": 24,
+      "spawnError": false
+    },
+    {
+      "name": "build",
+      "command": "pnpm build",
+      "exitCode": 0,
+      "durationMs": 8903,
+      "stdoutHash": "92b2a8b4c4fbd5ca1199c47a5a0b53f1e37309ad9c84a401069bc013ee855d06",
+      "stderrHash": "87ef89fc66b05699d57e3ebddbffde3a78201a046aaf664157c21cee3842d2df",
+      "stdoutBytes": 1153,
+      "stderrBytes": 20,
+      "spawnError": false
+    },
+    {
+      "name": "dockerCatalog",
+      "command": "pnpm test:docker",
+      "exitCode": 0,
+      "durationMs": 4571,
+      "stdoutHash": "3b18fae19012dc9c086afea1e5b2bfaa94802a6f3d5a0435446105d0e8af040e",
+      "stderrHash": "8f290d9210047a745b6c5654f93fc6075dc65275c760cc9a27029850fb506d3a",
+      "stdoutBytes": 51,
+      "stderrBytes": 143,
+      "spawnError": false
+    },
+    {
+      "name": "e2e",
+      "command": "pnpm test:e2e",
+      "exitCode": 0,
+      "durationMs": 29763,
+      "stdoutHash": "a787831b3e0b0b57ed39782748a2bb4ab1f3a8622b0addbfdf6df22f3f4b1c1c",
+      "stderrHash": "29c8cb3def8947328f10554b90e6c1d0cc0b6ba28e16e3a3e931a32408ba44ba",
+      "stdoutBytes": 2512,
+      "stderrBytes": 56,
+      "spawnError": false
+    },
+    {
+      "name": "diffCheck",
+      "command": "git diff --check",
+      "exitCode": 0,
+      "durationMs": 119,
+      "stdoutHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderrHash": "616f9531f8f865d36936a871634fd65a997809f01617d106f9b2fa7b957a6dd1",
+      "stdoutBytes": 0,
+      "stderrBytes": 6333,
+      "spawnError": false
+    },
+    {
+      "name": "composeTopology",
+      "command": "docker compose -p infra -f infra/compose.yaml ps --format json",
+      "exitCode": 0,
+      "durationMs": 255,
+      "stdoutHash": "9b5beb4023daec15cf685af3f3211c54af8708ab10f77829bea643a240c616c3",
+      "stderrHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdoutBytes": 5607,
+      "stderrBytes": 0,
+      "spawnError": false
+    },
+    {
+      "name": "composeServices",
+      "command": "docker compose -p infra -f infra/compose.yaml config --services",
+      "exitCode": 0,
+      "durationMs": 169,
+      "stdoutHash": "4d0fe87bc1b175fcf8ab8b553dde7b93fd0055fa9de9a0ea7b7ac459d74b807a",
+      "stderrHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdoutBytes": 26,
+      "stderrBytes": 0,
+      "spawnError": false
+    },
+    {
+      "name": "composeStats",
+      "command": "docker compose -p infra -f infra/compose.yaml stats --no-stream --format json",
+      "exitCode": 0,
+      "durationMs": 2228,
+      "stdoutHash": "4c40c9d0316981bf7d71cb309c9c71f2d73a39d1e93351378d9f79754276007e",
+      "stderrHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdoutBytes": 1016,
+      "stderrBytes": 0,
+      "spawnError": false
+    }
+  ],
+  "provenance": {
+    "dirty": true,
+    "statusHash": "e5931256bca7cf70bcd5bbe369c5a4400d1b2e331edc27cc02c09c1ba9b38033",
+    "diffHash": "fe73aafe7962e16d0d0ca146395fe7a28a290d861739471156f3d0132bacea52",
+    "stagedDiffHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "provenanceCommandsPassed": true
+  }
+}

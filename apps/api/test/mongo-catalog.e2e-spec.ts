@@ -1,6 +1,7 @@
 import {
   buildCollModCommand,
   COLLECTION_DEFINITIONS,
+  ensureNamedIndexes,
   INDEX_DEFINITIONS,
 } from '../src/database/bootstrap.service';
 import { Test } from '@nestjs/testing';
@@ -13,11 +14,35 @@ import {
 import { seedCatalog, SEED_CATALOG } from '../src/database/seed.service';
 import { CatalogService } from '../src/catalog/catalog.service';
 import { AppModule } from '../src/app.module';
+import { CASSANDRA_CLIENT, CASSANDRA_CONFIG } from '../src/projections/cassandra.provider';
 
 const { buildFixtureFilter } = require('./mongo-catalog.fixture.cjs');
 
 const UUID_V4_PATTERN =
   '^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$';
+
+async function expectAppModuleError(message: string, configureMongo: () => void): Promise<void> {
+  const names = ['MONGODB_URI', 'MONGODB_DATABASE', 'OPERATOR_USERNAME', 'OPERATOR_PASSWORD_HASH', 'JWT_SECRET'] as const;
+  const original = new Map(names.map((name) => [name, process.env[name]]));
+  Object.assign(process.env, { OPERATOR_USERNAME: 'test-operator', OPERATOR_PASSWORD_HASH: 'test-bcrypt-hash', JWT_SECRET: 'test-jwt-secret' });
+  configureMongo();
+  try {
+    await expect(
+      Test.createTestingModule({ imports: [AppModule] })
+        .overrideProvider(CASSANDRA_CONFIG)
+        .useValue({ contactPoints: ['cassandra'], localDataCenter: 'datacenter1', port: 9042 })
+        .overrideProvider(CASSANDRA_CLIENT)
+        .useValue({ shutdown: jest.fn() })
+        .compile(),
+    ).rejects.toThrow(message);
+  } finally {
+    for (const name of names) {
+      const value = original.get(name);
+      if (value === undefined) delete process.env[name];
+      else process.env[name] = value;
+    }
+  }
+}
 
 describe('MongoDB catalog foundation', () => {
   it('generates cleanup filters scoped to the fixture identity and restaurant', () => {
@@ -97,7 +122,7 @@ describe('MongoDB catalog foundation', () => {
 
     expect(catalogSchema.additionalProperties).toBe(false);
     expect(catalogSchema.required).toEqual(
-      expect.arrayContaining(['restaurantId', 'sku', 'priceCents', 'active']),
+      expect.arrayContaining(['restaurantId', 'sku', 'category', 'description', 'imageUrl', 'priceCents', 'active']),
     );
     expect(ordersSchema.additionalProperties).toBe(false);
     expect(outboxSchema.additionalProperties).toBe(false);
@@ -148,41 +173,66 @@ describe('MongoDB catalog foundation', () => {
       ],
       orders: [
         { key: { idempotencyKey: 1 }, name: 'uq_orders_idempotency', unique: true },
-        { key: { restaurantId: 1, createdAt: -1 }, name: 'ix_orders_restaurant_createdAt' },
+        { key: { restaurantId: 1, createdAt: -1, _id: -1 }, name: 'ix_orders_restaurant_createdAt' },
       ],
       outbox: [
         { key: { eventId: 1 }, name: 'uq_outbox_eventId', unique: true },
         {
-          key: { processedAt: 1, nextAttemptAt: 1, leaseUntil: 1, createdAt: 1 },
+          key: { status: 1, cleanupProtected: 1, nextAttemptAt: 1, occurredAt: 1, _id: 1 },
           name: 'ix_outbox_claim',
+        },
+        {
+          key: { status: 1, cleanupProtected: 1, leaseUntil: 1, occurredAt: 1, _id: 1 },
+          name: 'ix_outbox_claim_expired_processing',
         },
       ],
     });
   });
 
+  it('replaces a named index only when its key changes and leaves the migrated index alone thereafter', async () => {
+    const dropIndex = jest.fn().mockResolvedValue(undefined);
+    const createIndex = jest.fn().mockResolvedValue('ix_outbox_claim');
+    const listIndexes = jest.fn()
+      .mockReturnValueOnce({ toArray: jest.fn().mockResolvedValue([{ name: 'ix_outbox_claim', key: { processedAt: 1, nextAttemptAt: 1, leaseUntil: 1, createdAt: 1 } }]) })
+      .mockReturnValueOnce({ toArray: jest.fn().mockResolvedValue([{ name: 'ix_outbox_claim', key: { status: 1, cleanupProtected: 1, nextAttemptAt: 1, occurredAt: 1, _id: 1 } }]) });
+    const collection = { listIndexes, dropIndex, createIndex };
+    const pending = INDEX_DEFINITIONS.outbox.find((index) => index.name === 'ix_outbox_claim')!;
+
+    await ensureNamedIndexes(collection as never, [pending]);
+    await ensureNamedIndexes(collection as never, [pending]);
+
+    expect(dropIndex).toHaveBeenCalledTimes(1);
+    expect(createIndex).toHaveBeenCalledTimes(1);
+  });
+
   it('queries only active catalog items for a restaurant', async () => {
-    const find = jest.fn().mockReturnValue({
-      sort: jest.fn().mockReturnValue({
-        toArray: jest.fn().mockResolvedValue([
-          {
-            _id: '22222222-2222-4222-8222-222222222222',
-            restaurantId: '11111111-1111-4111-8111-111111111111',
-            sku: 'ACTIVE',
-            name: 'Active item',
-            priceCents: 1250,
-            active: true,
-          },
-          {
-            _id: '33333333-3333-4333-8333-333333333333',
-            restaurantId: '11111111-1111-4111-8111-111111111111',
-            sku: 'INACTIVE',
-            name: 'Inactive item',
-            priceCents: 1450,
-            active: false,
-          },
-        ]),
-      }),
+    const sort = jest.fn().mockReturnValue({
+      toArray: jest.fn().mockResolvedValue([
+        {
+          _id: '22222222-2222-4222-8222-222222222222',
+          restaurantId: '11111111-1111-4111-8111-111111111111',
+          sku: 'ACTIVE',
+          name: 'Active item',
+          category: 'Brasa',
+          description: 'A charcoal-grilled active item.',
+          imageUrl: null,
+          priceCents: 1250,
+          active: true,
+        },
+        {
+          _id: '33333333-3333-4333-8333-333333333333',
+          restaurantId: '11111111-1111-4111-8111-111111111111',
+          sku: 'INACTIVE',
+          name: 'Inactive item',
+          category: 'Brasa',
+          description: 'An inactive charcoal-grilled item.',
+          imageUrl: null,
+          priceCents: 1450,
+          active: false,
+        },
+      ]),
     });
+    const find = jest.fn().mockReturnValue({ sort });
     const db = { collection: jest.fn().mockReturnValue({ find }) };
     const service = new CatalogService(db as never);
 
@@ -192,6 +242,7 @@ describe('MongoDB catalog foundation', () => {
       restaurantId: '11111111-1111-4111-8111-111111111111',
       active: true,
     });
+    expect(sort).toHaveBeenCalledWith({ category: 1, name: 1, sku: 1 });
   });
 
   it('returns catalog items parsed by the shared public contract', async () => {
@@ -201,6 +252,9 @@ describe('MongoDB catalog foundation', () => {
         restaurantId: '11111111-1111-4111-8111-111111111111',
         sku: 'ACTIVE',
         name: 'Active item',
+        category: 'Brasa',
+        description: 'A charcoal-grilled active item.',
+        imageUrl: null,
         priceCents: 1250,
         active: true,
         createdAt: new Date('2026-01-01T00:00:00.000Z'),
@@ -218,6 +272,9 @@ describe('MongoDB catalog foundation', () => {
         restaurantId: '11111111-1111-4111-8111-111111111111',
         sku: 'ACTIVE',
         name: 'Active item',
+        category: 'Brasa',
+        description: 'A charcoal-grilled active item.',
+        imageUrl: null,
         priceCents: 1250,
         active: true,
       },
@@ -231,6 +288,9 @@ describe('MongoDB catalog foundation', () => {
         restaurantId: '11111111-1111-4111-8111-111111111111',
         sku: 'ACTIVE',
         name: 'Active item',
+        category: 'Brasa',
+        description: 'A charcoal-grilled active item.',
+        imageUrl: null,
         priceCents: 1250,
         active: true,
       },
@@ -250,15 +310,17 @@ describe('MongoDB catalog foundation', () => {
     await seedCatalog(db as never);
     await seedCatalog(db as never);
 
-    expect(SEED_CATALOG).toHaveLength(3);
+    expect(SEED_CATALOG).toHaveLength(12);
+    expect(SEED_CATALOG.filter((item) => item.active)).toHaveLength(10);
+    expect(SEED_CATALOG.filter((item) => !item.active)).toHaveLength(2);
     expect(bulkWrite).toHaveBeenCalledTimes(2);
     expect(bulkWrite.mock.calls[0][0]).toEqual(bulkWrite.mock.calls[1][0]);
     expect(bulkWrite.mock.calls[0][0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          updateOne: expect.objectContaining({
+          replaceOne: expect.objectContaining({
             filter: expect.objectContaining({ _id: expect.any(String) }),
-            update: { $setOnInsert: expect.any(Object) },
+            replacement: expect.objectContaining({ category: expect.any(String), description: expect.any(String), imageUrl: null }),
             upsert: true,
           }),
         }),
@@ -266,46 +328,24 @@ describe('MongoDB catalog foundation', () => {
     );
     expect(bulkWrite.mock.calls[0][0]).toEqual(
       SEED_CATALOG.map((item) => ({
-        updateOne: { filter: { _id: item._id }, update: { $setOnInsert: item }, upsert: true },
+        replaceOne: { filter: { _id: item._id }, replacement: item, upsert: true },
       })),
     );
     expect(bulkWrite.mock.calls[0][1]).toEqual({ ordered: true });
   });
 
   it('fails AppModule startup when Mongo configuration is missing', async () => {
-    const originalUri = process.env.MONGODB_URI;
-    const originalDatabase = process.env.MONGODB_DATABASE;
-    delete process.env.MONGODB_URI;
-    delete process.env.MONGODB_DATABASE;
-
-    try {
-      await expect(Test.createTestingModule({ imports: [AppModule] }).compile()).rejects.toThrow(
-        'MONGODB_URI is required',
-      );
-    } finally {
-      if (originalUri === undefined) delete process.env.MONGODB_URI;
-      else process.env.MONGODB_URI = originalUri;
-      if (originalDatabase === undefined) delete process.env.MONGODB_DATABASE;
-      else process.env.MONGODB_DATABASE = originalDatabase;
-    }
+    await expectAppModuleError('MONGODB_URI is required', () => {
+      delete process.env.MONGODB_URI;
+      delete process.env.MONGODB_DATABASE;
+    });
   });
 
   it('fails before connecting when the Mongo database name is missing', async () => {
-    const originalUri = process.env.MONGODB_URI;
-    const originalDatabase = process.env.MONGODB_DATABASE;
-    process.env.MONGODB_URI = 'mongodb://127.0.0.1:1';
-    delete process.env.MONGODB_DATABASE;
-
-    try {
-      await expect(Test.createTestingModule({ imports: [AppModule] }).compile()).rejects.toThrow(
-        'MONGODB_DATABASE is required',
-      );
-    } finally {
-      if (originalUri === undefined) delete process.env.MONGODB_URI;
-      else process.env.MONGODB_URI = originalUri;
-      if (originalDatabase === undefined) delete process.env.MONGODB_DATABASE;
-      else process.env.MONGODB_DATABASE = originalDatabase;
-    }
+    await expectAppModuleError('MONGODB_DATABASE is required', () => {
+      process.env.MONGODB_URI = 'mongodb://127.0.0.1:1';
+      delete process.env.MONGODB_DATABASE;
+    });
   });
 
   it('models invalid and duplicate writes as Mongo enforcement concerns', () => {
@@ -318,6 +358,9 @@ describe('MongoDB catalog foundation', () => {
       expect.objectContaining({ bsonType: 'int', minimum: 0 }),
     );
     expect(catalogSchema.properties.active).toEqual({ bsonType: 'bool' });
+    expect(catalogSchema.properties.category).toEqual(expect.objectContaining({ bsonType: 'string', minLength: 1 }));
+    expect(catalogSchema.properties.description).toEqual(expect.objectContaining({ bsonType: 'string', minLength: 1 }));
+    expect(catalogSchema.properties.imageUrl).toEqual({ bsonType: ['string', 'null'], minLength: 1 });
     expect(catalogIndex).toEqual(
       expect.objectContaining({
         key: { restaurantId: 1, sku: 1 },

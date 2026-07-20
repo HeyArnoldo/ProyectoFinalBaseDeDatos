@@ -1,10 +1,11 @@
-import { Injectable, Optional } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import type { OperatorLoginRequest } from '@app/contracts';
 
 export const OPERATOR_SESSION_COOKIE = 'operator_session';
 export const OPERATOR_SESSION_TTL_SECONDS = 15 * 60;
+export const AUTH_CONFIG = Symbol('AUTH_CONFIG');
 
 export type AuthConfig = { username: string; passwordHash: string; jwtSecret: string };
 export type OperatorPrincipal = { sub: string; role: 'operator' };
@@ -15,7 +16,7 @@ export function loadAuthConfig(): AuthConfig { return { username: requiredAuthEn
 
 @Injectable()
 export class AuthService {
-  constructor(@Optional() private readonly config: AuthConfig = loadAuthConfig()) {}
+  constructor(@Inject(AUTH_CONFIG) private readonly config: AuthConfig) {}
 
   async authenticate(request: OperatorLoginRequest): Promise<string | null> {
     if (request.username !== this.config.username || !(await bcrypt.compare(request.password, this.config.passwordHash))) return null;

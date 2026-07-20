@@ -6,7 +6,7 @@
 **Mode**: Strict TDD, partial work-unit verification
 **Date**: 2026-07-18
 
-> **Current state**: Re-verification after the authentication-configuration security remediation is appended below. The original verification remains intact as historical evidence.
+> **Current state**: Final Unit 5 verification after the explicit-DI remediation is appended last. Earlier verification sections remain intact as historical evidence.
 
 ### Verdict
 
@@ -270,3 +270,91 @@ None. The critical finding recorded in Engram `#563` is closed by source, test, 
 - Task 5.2 / Unit 10 — UI/database evidence and load checks
 
 These later tasks remain change work, not Unit 5 defects.
+
+---
+
+## Final Verification — Explicit DI Remediation
+
+**Date**: 2026-07-18
+**Trigger**: Final Unit 5 gate after replacing optional type-only auth configuration injection
+**Final verdict**: **PASS WITH WARNINGS**
+
+The explicit-DI finding is **CLOSED**. Authentication configuration can no longer be supplied accidentally through Nest's generic `Object` metadata token, and real `AuthModule` initialization rejects every missing or whitespace-only auth variable. All prior Unit 5 scenarios remain regression-green.
+
+### Explicit DI Closure Matrix
+
+| Obligation | Evidence | Result |
+|---|---|---|
+| Dedicated auth token | `AUTH_CONFIG = Symbol('AUTH_CONFIG')` at `apps/api/src/auth/auth.service.ts:8` | ✅ CLOSED |
+| Provider factory runs production config loading | `{ provide: AUTH_CONFIG, useFactory: loadAuthConfig }` at `apps/api/src/auth/auth.module.ts:3,6-9` | ✅ CLOSED |
+| AuthService requires the explicit token | `@Inject(AUTH_CONFIG)` constructor at `apps/api/src/auth/auth.service.ts:17-20`; no `@Optional` or default remains | ✅ CLOSED |
+| Generic `Object` provider cannot bypass fail-fast | Metadata and real-module regression at `apps/api/test/auth-transition.e2e-spec.ts:46-55`; independent module probe rejected all six missing/blank cases despite an `Object` provider | ✅ CLOSED |
+| Real module rejects absent/blank environment | Independent `AuthModule` compilation probe rejected missing and whitespace-only values for each of `OPERATOR_USERNAME`, `OPERATOR_PASSWORD_HASH`, and `JWT_SECRET` | ✅ CLOSED |
+| Mongo AppModule tests remain isolated | Test-only placeholders are scoped/restored by `expectAppModuleError` at `apps/api/test/mongo-catalog.e2e-spec.ts:22-35`; exact Mongo error assertions remain at `:291-303` | ✅ CLOSED |
+| Production behavior is not weakened by placeholders | Placeholders exist only in test process environment; production `AuthModule` still invokes `loadAuthConfig`, and Compose still requires all three variables at `infra/compose.yaml:38-40` | ✅ CLOSED |
+
+### Final Command Evidence
+
+| Command | Result | Evidence |
+|---|---|---|
+| Focused contracts build plus `auth-transition.e2e-spec.ts` | ✅ Exit 0 | 1 suite, 18/18 tests passed in 8.703 s |
+| `pnpm test` | ✅ Exit 0 | 5 suites, 42/42 tests passed in 12.241 s |
+| `pnpm typecheck` | ✅ Exit 0 | Contracts, web, and API passed |
+| `pnpm build` | ✅ Exit 0 | Contracts, Vite web, and API passed |
+| `git diff --check` | ✅ Exit 0 | No whitespace errors; LF→CRLF working-copy warnings only |
+| Auxiliary real-`AuthModule` fail-fast probe | ✅ Exit 0 | Missing and blank values for all three auth variables were rejected despite an `Object` provider |
+| Auxiliary public HTTP probe | ✅ Exit 0 | `POST /orders/checkout` and `GET /catalog` succeeded with zero auth-guard verification calls |
+
+Compose was inspected but not re-executed: `infra/compose.yaml:38-40` is unchanged and still uses mandatory `${VAR:?message}` interpolation. The preceding verification section preserves successful Compose validation with temporary values and deterministic missing-variable rejection. No service, container, or volume command was run in this final gate.
+
+### Final Unit 5 Requirement Matrix
+
+| Requirement | Evidence | Result |
+|---|---|---|
+| Required non-empty static operator configuration | `apps/api/src/auth/auth.service.ts:8-20`; focused config/DI tests and real-module probe | ✅ COMPLIANT |
+| Bcrypt verification and HS256 JWT exactly 15 minutes | `apps/api/src/auth/auth.service.ts:21-37`; `apps/api/test/auth-transition.e2e-spec.ts:106-121` | ✅ COMPLIANT |
+| Cookie `HttpOnly; Secure; SameSite=Strict; Path=/` | `apps/api/src/auth/auth.controller.ts:17-23`; assertions at `apps/api/test/auth-transition.e2e-spec.ts:106-115` | ✅ COMPLIANT |
+| Absent/invalid/expired session rejected before mutation/disclosure | `apps/api/src/auth/operator.guard.ts:15-21`; HTTP regression at `apps/api/test/auth-transition.e2e-spec.ts:124-145` | ✅ COMPLIANT |
+| Public catalog and checkout remain public | `apps/api/src/catalog/catalog.controller.ts:5-12`, `apps/api/src/orders/orders.controller.ts:15-20`; final auxiliary HTTP probe passed | ✅ COMPLIANT for current behavior |
+| Allowed transition chain and cancellation boundary | `apps/api/src/orders/transition.service.ts:8-20`; focused matrix at `apps/api/test/auth-transition.e2e-spec.ts:152-176` | ✅ COMPLIANT |
+| Prior-state filter, history, and one pending status outbox in one native transaction | `apps/api/src/orders/transition.service.ts:29-72`; orchestration assertions at `apps/api/test/auth-transition.e2e-spec.ts:157-169` | ⚠️ COMPLIANT at mock-orchestration level |
+| Invalid/stale transitions leave data unchanged | `apps/api/test/auth-transition.e2e-spec.ts:179-191` | ⚠️ COMPLIANT at mock level |
+| No registration, refresh, or Unit 6+ implementation | Auth controller exposes only login at `apps/api/src/auth/auth.controller.ts:6-25`; no registration/refresh source found | ✅ COMPLIANT |
+| Canonical UUID/Zod/Nest/native Mongo patterns | `packages/contracts/src/index.ts:41-48`, `apps/api/src/orders/orders.controller.ts:25-29`, `apps/api/src/orders/transition.service.ts:1-5,23-32` | ✅ COMPLIANT |
+
+### Final Strict TDD Audit
+
+Engram apply-progress `#487` contains all three Unit 5 stages:
+
+| Stage | Historical RED | Current/recorded GREEN | Status |
+|---|---|---|---|
+| `3.1 initial` | Auth/transition modules and JWT dependency absent | Focused 8/8; full 32/32 | ✅ Present |
+| `3.1 security remediation` | Four failures exposed defaults and absent Compose requirements | Focused 16/16; full 40/40 | ✅ Present |
+| `3.1 DI remediation` | Focused collection/type failure because `AUTH_CONFIG` was absent | Focused 18/18; full 42/42 | ✅ Present |
+
+Historical RED states were not replayed against reverted trees. Current DI GREEN, full regression, typecheck, build, real-module fail-fast, and public access were independently executed. The 18 focused tests comprise ten configuration/DI checks, three Nest HTTP tests, and five transition unit/orchestration tests. Assertion review found no tautology, ghost loop, or assertion-free path.
+
+Coverage percentages remain unavailable because `openspec/config.yaml:22` defines no coverage tool or command. No linter is configured.
+
+### Final Findings
+
+#### CRITICAL
+
+None. The default-credential/JWT-secret and generic-`Object` DI bypass findings are closed.
+
+#### WARNING
+
+1. **Real MongoDB replica-set atomicity remains unproven.** Unit 5 transition tests use fake sessions and collections at `apps/api/test/auth-transition.e2e-spec.ts:63-75`; assertions at `:157-169` prove orchestration, not real commit/abort, isolation, retry behavior, or exactly one committed outbox record.
+2. **Public-access regression coverage is executable but not persisted at HTTP level.** The final independent HTTP probe passed, but the repository still lacks a durable Supertest test covering both public catalog and checkout access.
+3. **The Unit 5 review budget was exceeded.** Apply-progress `#487` records approximately 524 attributable cumulative lines, roughly 124 above the 400-line budget after the initial implementation plus critical and DI security remediations. This is an explicit review-workload deviation, not compliance with the budget.
+
+#### CLOSED
+
+1. Required auth values with no defaults or repository secrets.
+2. Explicit `AUTH_CONFIG` factory injection and resistance to generic `Object` providers.
+3. Real-module missing/blank fail-fast behavior.
+4. Five-complete/five-pending task summary.
+
+### Gate Boundary
+
+Unit 5 / task 3.1 passes this final gate with the warnings above. Units 6–10 remain intentionally pending and are outside this verification.

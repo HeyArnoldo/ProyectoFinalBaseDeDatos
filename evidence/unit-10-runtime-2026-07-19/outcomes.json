@@ -1,0 +1,67 @@
+{
+  "schemaVersion": 2,
+  "passed": true,
+  "outcomes": {
+    "focusedWebTests": {
+      "passed": true,
+      "exitCode": 0,
+      "durationMs": 12569
+    },
+    "fullTests": {
+      "passed": true,
+      "exitCode": 0,
+      "durationMs": 32458
+    },
+    "typecheck": {
+      "passed": true,
+      "exitCode": 0,
+      "durationMs": 9634
+    },
+    "build": {
+      "passed": true,
+      "exitCode": 0,
+      "durationMs": 8903
+    },
+    "dockerCatalog": {
+      "passed": true,
+      "exitCode": 0,
+      "durationMs": 4571
+    },
+    "e2e": {
+      "passed": true,
+      "exitCode": 0,
+      "durationMs": 29763
+    },
+    "diffCheck": {
+      "passed": true,
+      "exitCode": 0,
+      "durationMs": 119
+    },
+    "composeTopology": {
+      "passed": true,
+      "exitCode": 0,
+      "durationMs": 255
+    },
+    "composeServices": {
+      "passed": true,
+      "exitCode": 0,
+      "durationMs": 169
+    },
+    "composeStats": {
+      "passed": true,
+      "exitCode": 0,
+      "durationMs": 2228
+    }
+  },
+  "topology": {
+    "healthy": true,
+    "healthyServiceCount": 4,
+    "expectedServiceCount": 4
+  },
+  "provenance": {
+    "passed": true,
+    "dirty": true,
+    "diffHash": "fe73aafe7962e16d0d0ca146395fe7a28a290d861739471156f3d0132bacea52"
+  },
+  "note": "Derived from executed commands. Only sanitized command metadata and stdout/stderr hashes are persisted."
+}

@@ -66,7 +66,7 @@ describe('guest checkout', () => {
 
     const result = await service.checkout(request(), RESTAURANT_ID);
 
-    expect(result).toEqual({ orderId: ORDER_ID, totalCents: 2500, status: 'PENDING' });
+    expect(result).toEqual({ orderId: ORDER_ID, totalCents: 2500, status: 'PENDING', projectionStatus: 'PENDING' });
     expect(catalog.find).toHaveBeenCalledWith(
       { _id: { $in: [ITEM_ID] }, restaurantId: RESTAURANT_ID, active: true },
       { session },
@@ -112,8 +112,8 @@ describe('guest checkout', () => {
     const { service, orders, outbox } = setup();
     await service.checkout(request());
     const original = orders.insertOne.mock.calls[0][0] as OrderDocument;
-    orders.findOne.mockResolvedValueOnce(original);
-    await expect(service.checkout(request({ totalCents: 99999 }))).resolves.toEqual({ orderId: original._id, totalCents: 2500, status: 'PENDING' });
+    orders.findOne.mockResolvedValueOnce({ ...original, status: 'CONFIRMED' });
+    await expect(service.checkout(request({ totalCents: 99999 }))).resolves.toEqual({ orderId: original._id, totalCents: 2500, status: 'PENDING', projectionStatus: 'PENDING' });
     expect(orders.insertOne).toHaveBeenCalledTimes(1);
     expect(outbox.insertOne).toHaveBeenCalledTimes(1);
 
@@ -123,7 +123,7 @@ describe('guest checkout', () => {
     orders.findOne.mockReset().mockResolvedValueOnce(null).mockResolvedValueOnce(original);
     orders.insertOne.mockRejectedValueOnce(Object.assign(new Error('duplicate key'), { code: 11000 }));
     await expect(service.checkout(request())).resolves.toEqual({
-      orderId: original._id, totalCents: original.totalCents, status: original.status,
+      orderId: original._id, totalCents: original.totalCents, status: 'PENDING', projectionStatus: 'PENDING',
     });
   });
 
@@ -152,12 +152,13 @@ describe('guest checkout', () => {
     expect(checkoutRequestSchema.safeParse({ items: [], idempotencyKey: '' }).success).toBe(false);
     expect(checkoutRequestSchema.safeParse({ ...request(), items: [{ catalogItemId: ITEM_ID, quantity: 0 }] }).success).toBe(false);
 
-    const checkout = jest.fn().mockResolvedValue({ orderId: ORDER_ID, totalCents: 2500, status: 'PENDING' });
+    const checkout = jest.fn().mockResolvedValue({ orderId: ORDER_ID, totalCents: 2500, status: 'PENDING', projectionStatus: 'PENDING' });
     const controller = new OrdersController({ checkout } as never);
     await expect(controller.checkout(request())).resolves.toEqual({
       orderId: ORDER_ID,
       totalCents: 2500,
       status: 'PENDING',
+      projectionStatus: 'PENDING',
     });
     expect(checkout).toHaveBeenCalledWith(request(), RESTAURANT_ID);
 

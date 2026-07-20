@@ -21,7 +21,12 @@ function requestHash(request: CheckoutRequest, restaurantId: string): string {
 }
 
 function responseFor(order: OrderDocument): CheckoutResponse {
-  return checkoutResponseSchema.parse({ orderId: order._id, totalCents: order.totalCents, status: order.status });
+  return checkoutResponseSchema.parse({
+    orderId: order._id,
+    totalCents: order.totalCents,
+    status: 'PENDING',
+    projectionStatus: 'PENDING',
+  });
 }
 
 function buildSnapshots(requestItems: CheckoutRequest['items'], catalogItems: CatalogPriceRecord[]): OrderItemSnapshot[] {
@@ -107,8 +112,10 @@ export class CheckoutService {
           attempts: 0,
           nextAttemptAt: null,
           leaseUntil: null,
+          leaseId: null,
           processedAt: null,
           lastError: null,
+          cleanupProtected: false,
           createdAt: now,
           updatedAt: now,
         };

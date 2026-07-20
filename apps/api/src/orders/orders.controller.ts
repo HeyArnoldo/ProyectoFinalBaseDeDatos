@@ -1,15 +1,17 @@
-import { BadRequestException, Body, Controller, Optional, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
-import { checkoutRequestSchema, orderTransitionRequestSchema } from '@app/contracts';
+import { BadRequestException, Body, Controller, Get, Optional, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
+import { checkoutRequestSchema, operatorOrdersQuerySchema, orderTransitionRequestSchema } from '@app/contracts';
 import { DEFAULT_RESTAURANT_ID } from '../database/seed.service';
 import { OperatorGuard } from '../auth/operator.guard';
 import { CheckoutService } from './checkout.service';
 import { TransitionService } from './transition.service';
+import { OperatorOrdersService } from './operator-orders.service';
 
 @Controller('orders')
 export class OrdersController {
   constructor(
     private readonly checkoutService: CheckoutService,
     @Optional() private readonly transitionService?: TransitionService,
+    @Optional() private readonly operatorOrders?: OperatorOrdersService,
   ) {}
 
   @Post('checkout')
@@ -17,6 +19,15 @@ export class OrdersController {
     const parsed = checkoutRequestSchema.safeParse(body);
     if (!parsed.success) throw new BadRequestException('Invalid checkout request');
     return this.checkoutService.checkout(parsed.data, restaurantId ?? DEFAULT_RESTAURANT_ID);
+  }
+
+  @Get()
+  @UseGuards(OperatorGuard)
+  async list(@Query() query: unknown) {
+    const parsed = operatorOrdersQuerySchema.safeParse(query);
+    if (!parsed.success) throw new BadRequestException('Invalid operator orders query');
+    if (!this.operatorOrders) throw new Error('Operator orders service is not configured');
+    return this.operatorOrders.list(parsed.data);
   }
 
   @Patch(':orderId/status')

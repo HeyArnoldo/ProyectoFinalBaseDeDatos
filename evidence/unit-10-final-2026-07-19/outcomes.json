@@ -1,0 +1,121 @@
+{
+  "schemaVersion": 2,
+  "passed": true,
+  "outcomes": {
+    "focusedWebTests": {
+      "passed": true,
+      "exitCode": 0,
+      "durationMs": 12225
+    },
+    "fullTests": {
+      "passed": true,
+      "exitCode": 0,
+      "durationMs": 31241
+    },
+    "typecheck": {
+      "passed": true,
+      "exitCode": 0,
+      "durationMs": 10303
+    },
+    "build": {
+      "passed": true,
+      "exitCode": 0,
+      "durationMs": 8969
+    },
+    "dockerCatalog": {
+      "passed": true,
+      "exitCode": 0,
+      "durationMs": 4349
+    },
+    "e2e": {
+      "passed": true,
+      "exitCode": 0,
+      "durationMs": 39499
+    },
+    "diffCheck": {
+      "passed": true,
+      "exitCode": 0,
+      "durationMs": 111
+    },
+    "composeTopology": {
+      "passed": true,
+      "exitCode": 0,
+      "durationMs": 265
+    },
+    "composeServices": {
+      "passed": true,
+      "exitCode": 0,
+      "durationMs": 154
+    },
+    "composeStats": {
+      "passed": true,
+      "exitCode": 0,
+      "durationMs": 2322
+    }
+  },
+  "topology": {
+    "healthy": true,
+    "healthyServiceCount": 4,
+    "expectedServiceCount": 4
+  },
+  "provenance": {
+    "passed": true,
+    "dirty": true,
+    "diffHash": "2910494c7cd88b82364da977d0bcf95e3cb0cc9be5961b1732fbcc60fcf4d154",
+    "contentHash": "af6e28f5262ecabbae237a83f12b422a628996284fae206f5f316ce269abd738"
+  },
+  "uiArtifacts": {
+    "files": [
+      {
+        "path": "ui/operator-orders-chromium-desktop.axe.json",
+        "sha256": "9308b466bd85377f85a13bfe1971460d5338ca27c0c6fc12f6914a4f779d6306"
+      },
+      {
+        "path": "ui/operator-orders-chromium-desktop.png",
+        "sha256": "da4221711c608959397bb47c25245a48309a9aada725b55a100e97fd96986bee"
+      },
+      {
+        "path": "ui/operator-orders-chromium-mobile.axe.json",
+        "sha256": "a52fe20fbf579a3c6336b8c9ec9e2e72c797e62cac35f704769bfe55712545c3"
+      },
+      {
+        "path": "ui/operator-orders-chromium-mobile.png",
+        "sha256": "7a43ede2b55ed2f4374f1db8cdb05e06372a48f0fe3e8af02780d7654e1e87af"
+      },
+      {
+        "path": "ui/operator-projection-chromium-desktop.axe.json",
+        "sha256": "c81a03f0451846fb543d98b886c42ac9136070059080988228ac73a5ffb9630a"
+      },
+      {
+        "path": "ui/operator-projection-chromium-desktop.png",
+        "sha256": "55e8e84b36e748a391de826b0bfa562ce5b32c8b88e36d69e5346a8bdf2abce1"
+      },
+      {
+        "path": "ui/operator-projection-chromium-mobile.axe.json",
+        "sha256": "c81a03f0451846fb543d98b886c42ac9136070059080988228ac73a5ffb9630a"
+      },
+      {
+        "path": "ui/operator-projection-chromium-mobile.png",
+        "sha256": "7f0482e549a4d60d7cc5754719ad2984333cf3a93a92b0956987613f66024aba"
+      },
+      {
+        "path": "ui/public-confirmation-chromium-desktop.axe.json",
+        "sha256": "fa3c0c5be2ce323d8c2cbd56aaedbf9f6bc1ac19e906794255d65863e6d8b96e"
+      },
+      {
+        "path": "ui/public-confirmation-chromium-desktop.png",
+        "sha256": "ba0793cd675fe9ff4bb8b9afa37f9c90471a980b1794072f6286bbdb55926bb9"
+      },
+      {
+        "path": "ui/public-confirmation-chromium-mobile.axe.json",
+        "sha256": "fa3c0c5be2ce323d8c2cbd56aaedbf9f6bc1ac19e906794255d65863e6d8b96e"
+      },
+      {
+        "path": "ui/public-confirmation-chromium-mobile.png",
+        "sha256": "a12c18df7621cf6a1f3a389904fabdda6786a330733f0899844ab93071cd208e"
+      }
+    ],
+    "hash": "4c1e3f8312e13f2164e2cbc0b3550c16f4944e25bd8028d03bd46a0d23f67a6c"
+  },
+  "note": "Derived from executed commands. Only sanitized command metadata and stdout/stderr hashes are persisted."
+}

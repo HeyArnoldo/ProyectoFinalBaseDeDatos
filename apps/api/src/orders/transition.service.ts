@@ -59,8 +59,10 @@ export class TransitionService {
           attempts: 0,
           nextAttemptAt: null,
           leaseUntil: null,
+          leaseId: null,
           processedAt: null,
           lastError: null,
+          cleanupProtected: false,
           createdAt: at,
           updatedAt: at,
         };

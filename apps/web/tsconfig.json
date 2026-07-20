@@ -6,7 +6,7 @@
     "module": "ESNext",
     "moduleResolution": "Bundler",
     "noEmit": true,
-    "types": ["vite/client"]
+    "types": ["vite/client", "vitest/globals", "vitest/jsdom", "@testing-library/jest-dom"]
   },
-  "include": ["src"]
+  "include": ["src", "test", "vite.config.ts", "vitest.config.ts"]
 }

@@ -4,8 +4,10 @@ services:
       context: ..
       dockerfile: apps/web/Dockerfile
     mem_limit: 96m
+    environment:
+      SERVICE_FQDN_WEB_80: "${SERVICE_FQDN_WEB_80:-https://restaurante.cloud.groowtech.com}"
     ports:
-      - "8080:80"
+      - "${WEB_BIND_ADDRESS:-127.0.0.1}:${WEB_PORT:-8080}:80"
     depends_on:
       api:
         condition: service_healthy
@@ -21,11 +23,6 @@ services:
       options:
         max-size: 10m
         max-file: "3"
-    networks:
-      platform:
-        aliases:
-          - web
-
   api:
     build:
       context: ..
@@ -35,6 +32,9 @@ services:
       API_PORT: "3000"
       MONGODB_URI: mongodb://mongodb:27017/?replicaSet=rs0
       MONGODB_DATABASE: restaurant
+      CASSANDRA_CONTACT_POINTS: cassandra
+      CASSANDRA_LOCAL_DATACENTER: datacenter1
+      CASSANDRA_PORT: "9042"
       OPERATOR_USERNAME: "${OPERATOR_USERNAME:?OPERATOR_USERNAME is required}"
       OPERATOR_PASSWORD_HASH: "${OPERATOR_PASSWORD_HASH:?OPERATOR_PASSWORD_HASH is required}"
       JWT_SECRET: "${JWT_SECRET:?JWT_SECRET is required}"
@@ -55,11 +55,6 @@ services:
       options:
         max-size: 10m
         max-file: "3"
-    networks:
-      platform:
-        aliases:
-          - api
-
   mongodb:
     image: mongo:8.0
     command: ["mongod", "--replSet", "rs0", "--bind_ip_all", "--wiredTigerCacheSizeGB", "0.5"]
@@ -79,11 +74,6 @@ services:
       options:
         max-size: 10m
         max-file: "3"
-    networks:
-      platform:
-        aliases:
-          - mongodb
-
   cassandra:
     image: cassandra:5.0
     environment:
@@ -111,14 +101,6 @@ services:
       options:
         max-size: 10m
         max-file: "3"
-    networks:
-      platform:
-        aliases:
-          - cassandra
-
 volumes:
   mongodb_data:
   cassandra_data:
-
-networks:
-  platform:

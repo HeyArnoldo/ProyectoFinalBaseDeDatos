@@ -44,7 +44,12 @@ describe('local runtime topology', () => {
       expect(readService(compose, service)).toContain(`mem_limit: ${memory}`);
     }
 
-    expect(readService(compose, 'web')).toContain('- "8080:80"');
+    expect(readService(compose, 'web')).toContain(
+      '- "${WEB_BIND_ADDRESS:-127.0.0.1}:${WEB_PORT:-8080}:80"',
+    );
+    expect(readService(compose, 'web')).toContain(
+      'SERVICE_FQDN_WEB_80: "${SERVICE_FQDN_WEB_80:-https://restaurante.cloud.groowtech.com}"',
+    );
     expect(readService(compose, 'api')).not.toMatch(/^    ports:/m);
     expect(readService(compose, 'mongodb')).not.toMatch(/^    ports:/m);
     expect(readService(compose, 'cassandra')).not.toMatch(/^    ports:/m);
@@ -71,9 +76,8 @@ describe('local runtime topology', () => {
     expect(readService(compose, 'cassandra')).toContain(
       'cassandra_data:/var/lib/cassandra',
     );
-    expect(readService(compose, 'api')).toContain('- api');
-    expect(readService(compose, 'mongodb')).toContain('- mongodb');
-    expect(readService(compose, 'cassandra')).toContain('- cassandra');
+    expect(compose).not.toMatch(/^networks:/m);
+    expect(compose).not.toMatch(/^    networks:/m);
 
     expect(readProjectFile('infra/mongodb/healthcheck.js')).toContain(
       'replSetInitiate',
@@ -104,5 +108,9 @@ describe('local runtime topology', () => {
     expect(nginx).toContain('location = /api/health');
     expect(nginx).toContain('proxy_pass http://api:3000/health;');
     expect(nginx).toContain('location = /health');
+  });
+
+  it('enables Nest shutdown hooks so Docker SIGTERM drains workers and closes databases', () => {
+    expect(readProjectFile('apps/api/src/main.ts')).toContain('app.enableShutdownHooks()');
   });
 });

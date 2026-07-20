@@ -1,0 +1,78 @@
+{
+  "project": "infra",
+  "composeFile": "infra/compose.yaml",
+  "configuredServices": [
+    "mongodb",
+    "cassandra",
+    "api",
+    "web"
+  ],
+  "services": [
+    {
+      "service": "api",
+      "image": "infra-api",
+      "state": "running",
+      "health": "healthy",
+      "status": "Up 13 minutes (healthy)",
+      "ports": "3000/tcp"
+    },
+    {
+      "service": "cassandra",
+      "image": "cassandra:5.0",
+      "state": "running",
+      "health": "healthy",
+      "status": "Up 3 hours (healthy)",
+      "ports": "7000-7001/tcp, 7199/tcp, 9042/tcp, 9160/tcp"
+    },
+    {
+      "service": "mongodb",
+      "image": "mongo:8.0",
+      "state": "running",
+      "health": "healthy",
+      "status": "Up 3 hours (healthy)",
+      "ports": "27017/tcp"
+    },
+    {
+      "service": "web",
+      "image": "infra-web",
+      "state": "running",
+      "health": "healthy",
+      "status": "Up 13 minutes (healthy)",
+      "ports": "0.0.0.0:8080->80/tcp, [::]:8080->80/tcp"
+    }
+  ],
+  "dockerStats": [
+    {
+      "service": "web",
+      "cpu": "0.00%",
+      "memory": "8.602MiB / 96MiB",
+      "memoryPercent": "8.96%",
+      "pids": "9"
+    },
+    {
+      "service": "api",
+      "cpu": "0.51%",
+      "memory": "49.62MiB / 384MiB",
+      "memoryPercent": "12.92%",
+      "pids": "11"
+    },
+    {
+      "service": "cassandra",
+      "cpu": "2.56%",
+      "memory": "2.053GiB / 3GiB",
+      "memoryPercent": "68.43%",
+      "pids": "102"
+    },
+    {
+      "service": "mongodb",
+      "cpu": "1.06%",
+      "memory": "360.5MiB / 1.5GiB",
+      "memoryPercent": "23.47%",
+      "pids": "81"
+    }
+  ],
+  "expectedServiceCount": 4,
+  "runningServiceCount": 4,
+  "healthyServiceCount": 4,
+  "healthy": true
+}

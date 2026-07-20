@@ -9,7 +9,8 @@ import { Test, TestingModule } from '@nestjs/testing';
 import request from 'supertest';
 import jwt from 'jsonwebtoken';
 import { AuthController } from '../src/auth/auth.controller';
-import { AuthConfig, AuthService, loadAuthConfig, OPERATOR_SESSION_COOKIE } from '../src/auth/auth.service';
+import { AuthModule } from '../src/auth/auth.module';
+import { AUTH_CONFIG, AuthConfig, AuthService, loadAuthConfig, OPERATOR_SESSION_COOKIE } from '../src/auth/auth.service';
 import { OperatorGuard } from '../src/auth/operator.guard';
 import { CheckoutService } from '../src/orders/checkout.service';
 import { OrdersController } from '../src/orders/orders.controller';
@@ -41,6 +42,17 @@ describe('auth configuration safety', () => {
 
   it.each(REQUIRED_AUTH_ENV)('rejects blank %s', (blank) => { process.env[blank] = ' '; expect(() => loadAuthConfig()).toThrow(`${blank} is required`); });
   it('passes configured values through without defaults', () => expect(loadAuthConfig()).toEqual({ username: 'configured-operator', passwordHash: 'configured-bcrypt-hash', jwtSecret: 'configured-jwt-secret' }));
+
+  it('wires AuthConfig through a dedicated mandatory token instead of Object metadata', () => {
+    const providers = Reflect.getMetadata('providers', AuthModule) as unknown[];
+    expect(providers).toContainEqual({ provide: AUTH_CONFIG, useFactory: loadAuthConfig });
+    expect(Reflect.getMetadata('self:paramtypes', AuthService)).toEqual([{ index: 0, param: AUTH_CONFIG }]);
+  });
+
+  it('fails real AuthModule initialization even when an Object provider is present', async () => {
+    delete process.env.OPERATOR_USERNAME;
+    await expect(Test.createTestingModule({ imports: [AuthModule], providers: [{ provide: Object, useValue: {} }] }).compile()).rejects.toThrow('OPERATOR_USERNAME is required');
+  });
 
   it('requires all auth settings in the API Compose environment without repository secrets', () => {
     const compose = readFileSync(join(__dirname, '../../../infra/compose.yaml'), 'utf8');

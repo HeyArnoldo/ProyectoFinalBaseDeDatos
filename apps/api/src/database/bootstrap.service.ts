@@ -1,5 +1,5 @@
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
-import { Db } from 'mongodb';
+import type { Collection, Db, IndexDescription } from 'mongodb';
 import { MONGO_DATABASE } from './mongo.tokens';
 import { seedCatalog } from './seed.service';
 
@@ -11,13 +11,16 @@ export const COLLECTION_DEFINITIONS = {
     validator: {
       $jsonSchema: {
         bsonType: 'object',
-        required: ['_id', 'restaurantId', 'sku', 'name', 'priceCents', 'active', 'createdAt', 'updatedAt'],
+        required: ['_id', 'restaurantId', 'sku', 'name', 'category', 'description', 'imageUrl', 'priceCents', 'active', 'createdAt', 'updatedAt'],
         additionalProperties: false,
         properties: {
           _id: { bsonType: 'string', pattern: UUID_V4_PATTERN },
           restaurantId: { bsonType: 'string', pattern: UUID_V4_PATTERN },
           sku: { bsonType: 'string', minLength: 1, maxLength: 64 },
           name: { bsonType: 'string', minLength: 1, maxLength: 200 },
+          category: { bsonType: 'string', minLength: 1, maxLength: 64 },
+          description: { bsonType: 'string', minLength: 1, maxLength: 500 },
+          imageUrl: { bsonType: ['string', 'null'], minLength: 1 },
           priceCents: { bsonType: 'int', minimum: 0 },
           active: { bsonType: 'bool' },
           createdAt: { bsonType: 'date' },
@@ -48,13 +51,13 @@ export const COLLECTION_DEFINITIONS = {
     validator: {
       $jsonSchema: {
         bsonType: 'object',
-        required: ['_id', 'eventId', 'restaurantId', 'orderId', 'type', 'payload', 'occurredAt', 'status', 'attempts', 'createdAt', 'updatedAt'],
+        required: ['_id', 'eventId', 'restaurantId', 'orderId', 'type', 'payload', 'occurredAt', 'status', 'attempts', 'leaseId', 'createdAt', 'updatedAt'],
         additionalProperties: false,
         properties: {
           _id: { bsonType: 'string', pattern: UUID_V4_PATTERN }, eventId: { bsonType: 'string', pattern: UUID_V4_PATTERN }, restaurantId: { bsonType: 'string', pattern: UUID_V4_PATTERN }, orderId: { bsonType: 'string', pattern: UUID_V4_PATTERN },
           type: { bsonType: 'string', enum: ['ORDER_CREATED', 'ORDER_STATUS_CHANGED'] }, payload: { bsonType: 'object', required: ['status', 'totalCents'], additionalProperties: false, properties: { status: { bsonType: 'string' }, totalCents: { bsonType: 'int', minimum: 0 } } },
-          occurredAt: { bsonType: 'date' }, status: { bsonType: 'string', enum: ['PENDING', 'PROCESSING', 'PROCESSED'] }, attempts: { bsonType: 'int', minimum: 0 },
-          nextAttemptAt: { bsonType: ['date', 'null'] }, leaseUntil: { bsonType: ['date', 'null'] }, processedAt: { bsonType: ['date', 'null'] }, lastError: { bsonType: ['string', 'null'] }, createdAt: { bsonType: 'date' }, updatedAt: { bsonType: 'date' },
+          occurredAt: { bsonType: 'date' }, status: { bsonType: 'string', enum: ['PENDING', 'PROCESSING', 'PROCESSED'] }, attempts: { bsonType: 'int', minimum: 0 }, cleanupProtected: { bsonType: 'bool' },
+          nextAttemptAt: { bsonType: ['date', 'null'] }, leaseUntil: { bsonType: ['date', 'null'] }, leaseId: { bsonType: ['string', 'null'] }, processedAt: { bsonType: ['date', 'null'] }, lastError: { bsonType: ['string', 'null'] }, createdAt: { bsonType: 'date' }, updatedAt: { bsonType: 'date' },
         },
       },
     },
@@ -63,9 +66,41 @@ export const COLLECTION_DEFINITIONS = {
 
 export const INDEX_DEFINITIONS = {
   catalog_items: [{ key: { restaurantId: 1, sku: 1 }, name: 'uq_catalog_restaurant_sku', unique: true }],
-  orders: [{ key: { idempotencyKey: 1 }, name: 'uq_orders_idempotency', unique: true }, { key: { restaurantId: 1, createdAt: -1 }, name: 'ix_orders_restaurant_createdAt' }],
-  outbox: [{ key: { eventId: 1 }, name: 'uq_outbox_eventId', unique: true }, { key: { processedAt: 1, nextAttemptAt: 1, leaseUntil: 1, createdAt: 1 }, name: 'ix_outbox_claim' }],
+  orders: [{ key: { idempotencyKey: 1 }, name: 'uq_orders_idempotency', unique: true }, { key: { restaurantId: 1, createdAt: -1, _id: -1 }, name: 'ix_orders_restaurant_createdAt' }],
+  outbox: [
+    { key: { eventId: 1 }, name: 'uq_outbox_eventId', unique: true },
+    { key: { status: 1, cleanupProtected: 1, nextAttemptAt: 1, occurredAt: 1, _id: 1 }, name: 'ix_outbox_claim' },
+    { key: { status: 1, cleanupProtected: 1, leaseUntil: 1, occurredAt: 1, _id: 1 }, name: 'ix_outbox_claim_expired_processing' },
+  ],
 } as const;
+
+type NamedIndexDefinition = {
+  key: Readonly<Record<string, 1 | -1>>;
+  name: string;
+  unique?: boolean;
+};
+
+function hasMatchingIndexKey(existing: IndexDescription, expected: NamedIndexDefinition): boolean {
+  const actualEntries = Object.entries(existing.key ?? {});
+  const expectedEntries = Object.entries(expected.key);
+  return actualEntries.length === expectedEntries.length && expectedEntries.every(([field, direction], index) => {
+    const actual = actualEntries[index];
+    return actual?.[0] === field && actual?.[1] === direction;
+  }) && Boolean(existing.unique) === Boolean(expected.unique);
+}
+
+export async function ensureNamedIndexes(
+  collection: Collection,
+  definitions: readonly NamedIndexDefinition[],
+): Promise<void> {
+  const existingIndexes = await collection.listIndexes().toArray();
+  for (const definition of definitions) {
+    const existing = existingIndexes.find((index) => index.name === definition.name);
+    if (existing && hasMatchingIndexKey(existing, definition)) continue;
+    if (existing) await collection.dropIndex(definition.name);
+    await collection.createIndex(definition.key, { name: definition.name, unique: Boolean(definition.unique) });
+  }
+}
 
 export function buildCollModCommand(
   name: string,
@@ -87,12 +122,7 @@ export async function bootstrapMongo(db: Db): Promise<void> {
     } else {
       await db.createCollection(name, { ...definition, validationLevel: 'strict', validationAction: 'error' });
     }
-    for (const index of INDEX_DEFINITIONS[name as keyof typeof INDEX_DEFINITIONS]) {
-      await db.collection(name).createIndex(index.key, {
-        name: index.name,
-        unique: 'unique' in index ? index.unique : false,
-      });
-    }
+    await ensureNamedIndexes(db.collection(name), INDEX_DEFINITIONS[name as keyof typeof INDEX_DEFINITIONS]);
   }
   await seedCatalog(db);
 }

@@ -33,12 +33,14 @@ export type OutboxDocument = {
   type: 'ORDER_CREATED' | 'ORDER_STATUS_CHANGED';
   payload: { status: OrderStatus; totalCents: number };
   occurredAt: Date;
-  status: 'PENDING';
+  status: 'PENDING' | 'PROCESSING' | 'PROCESSED';
   attempts: number;
   nextAttemptAt: Date | null;
   leaseUntil: Date | null;
+  leaseId: string | null;
   processedAt: Date | null;
   lastError: string | null;
+  cleanupProtected?: boolean;
   createdAt: Date;
   updatedAt: Date;
 };

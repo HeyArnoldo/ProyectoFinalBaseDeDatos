@@ -12,7 +12,7 @@ const composeFile = resolve(projectRoot, 'infra/compose.yaml');
 const composeArgs = ['compose', '-f', composeFile];
 const restaurantId = '11111111-1111-4111-8111-111111111111';
 const fixture = {
-  _id: '55555555-5555-4555-8555-555555555555',
+  _id: 'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee',
   restaurantId,
   sku: 'BLACK-BOX-DUP',
 };
@@ -49,11 +49,13 @@ async function assertPublicCatalog() {
   assert(response.status === 200, `Expected catalog status 200, received ${response.status}`);
 
   const catalog = catalogItemSchema.array().parse(await response.json());
-  assert(catalog.length === 2, `Expected two active catalog items, received ${catalog.length}`);
+  assert(catalog.length === 10, `Expected ten active catalog items, received ${catalog.length}`);
   assert(catalog.every((item) => item.active), 'Catalog response included an inactive item');
   assert(
-    catalog.map((item) => item.sku).join(',') === 'BURGER-CLASSIC,PIZZA-MARGHERITA',
-    'Catalog response was not sorted by SKU or did not match the deterministic seed',
+    catalog.map((item) => `${item.category}:${item.name}:${item.sku}`).join('|') === [...catalog]
+      .sort((left, right) => left.category.localeCompare(right.category) || left.name.localeCompare(right.name) || left.sku.localeCompare(right.sku))
+      .map((item) => `${item.category}:${item.name}:${item.sku}`).join('|'),
+    'Catalog response was not sorted by category, product, and SKU',
   );
 }
 
@@ -68,6 +70,9 @@ const base = {
   restaurantId,
   sku: '${fixture.sku}',
   name: 'Black box item',
+  category: 'Brasa',
+  description: 'Black box catalog enforcement fixture.',
+  imageUrl: null,
   active: true,
   createdAt: now,
   updatedAt: now,
@@ -89,7 +94,7 @@ if (!invalidRejected || collection.countDocuments(fixtureFilter) !== 0) {
 collection.insertOne({...base, priceCents: NumberInt(1250)});
 let duplicateRejected = false;
 try {
-  collection.insertOne({...base, _id: '66666666-6666-4666-8666-666666666666', priceCents: NumberInt(1250)});
+    collection.insertOne({...base, _id: 'ffffffff-ffff-4fff-8fff-ffffffffffff', priceCents: NumberInt(1250)});
 } catch (error) {
   duplicateRejected = error.code === 11000;
 }

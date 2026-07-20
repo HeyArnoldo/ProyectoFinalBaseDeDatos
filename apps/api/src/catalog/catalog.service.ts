@@ -11,7 +11,7 @@ export class CatalogService {
     const items = await this.db
       .collection('catalog_items')
       .find({ restaurantId, active: true })
-      .sort({ sku: 1 })
+      .sort({ category: 1, name: 1, sku: 1 })
       .toArray();
 
     return catalogItemSchema.array().parse(items);

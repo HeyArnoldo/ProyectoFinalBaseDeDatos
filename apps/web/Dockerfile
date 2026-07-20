@@ -5,11 +5,14 @@ ENV HUSKY=0
 
 COPY pnpm-workspace.yaml pnpm-lock.yaml package.json ./
 COPY packages/tsconfig/strict.json packages/tsconfig/strict.json
+COPY packages/contracts/package.json packages/contracts/package.json
 COPY apps/web/package.json apps/web/package.json
 RUN pnpm install --frozen-lockfile --filter @app/web...
 
 COPY packages/tsconfig packages/tsconfig
-COPY apps/web/tsconfig.json apps/web/index.html apps/web/
+COPY packages/contracts/src packages/contracts/src
+COPY packages/contracts/tsconfig.json packages/contracts/tsconfig.json
+COPY apps/web/tsconfig.json apps/web/index.html apps/web/vite.config.ts apps/web/
 COPY apps/web/src apps/web/src
 RUN pnpm --filter @app/web build
 

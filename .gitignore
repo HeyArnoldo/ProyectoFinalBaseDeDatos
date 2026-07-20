@@ -1,3 +1,61 @@
-.atl/
-docs/informe/build/
+# Dependencies
 node_modules/
+.pnpm-store/
+
+# Environment files and local secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+
+# Generated build output
+**/dist/
+**/build/
+*.tsbuildinfo
+
+# Test and coverage output
+**/coverage/
+**/.nyc_output/
+**/playwright-report/
+**/test-results/
+
+# Tool caches
+**/.cache/
+**/.vite/
+.turbo/
+.eslintcache
+
+# Logs and temporary files
+*.log
+*.pid
+*.tmp
+*.temp
+tmp/
+temp/
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Local database files and dumps
+*.db
+*.sqlite
+*.sqlite3
+*.dump
+*.bak
+
+# Editors and operating systems
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+Desktop.ini
+*.swp
+*.swo
+
+# Local agent tooling
+.atl/

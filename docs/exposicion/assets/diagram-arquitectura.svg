@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 500" role="img" aria-label="Arquitectura de cuatro contenedores">
+  <style>text{font-family:Arial,sans-serif;fill:#1E1D1A}.title{font-size:27px;font-weight:700}.label{font-size:18px}.small{font-size:15px}.box{fill:#F7EFDF;stroke:#1E1D1A;stroke-width:3}.mongo{fill:#ead1c7;stroke:#C94A2F;stroke-width:3}.cass{fill:#d9e2d4;stroke:#4F6B45;stroke-width:3}.flow{fill:none;stroke:#C94A2F;stroke-width:5;marker-end:url(#arrow)}.async{fill:none;stroke:#4F6B45;stroke-width:5;stroke-dasharray:12 10;marker-end:url(#arrowGreen)}</style>
+  <defs><marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#C94A2F"/></marker><marker id="arrowGreen" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#4F6B45"/></marker></defs>
+  <rect x="220" y="55" width="900" height="375" rx="14" fill="none" stroke="#D89B2B" stroke-width="3"/><text x="245" y="90" class="small">LIMITE DE APLICACION</text>
+  <rect x="35" y="190" width="145" height="100" rx="12" class="box"/><text x="66" y="230" class="title">Navegador</text><text x="88" y="260" class="small">publico</text>
+  <rect x="270" y="190" width="160" height="100" rx="12" class="box"/><text x="322" y="230" class="title">Web</text><text x="302" y="260" class="small">interfaz</text>
+  <rect x="500" y="190" width="180" height="100" rx="12" class="box"/><text x="553" y="230" class="title">API</text><text x="535" y="260" class="small">worker embebido</text>
+  <rect x="760" y="145" width="170" height="100" rx="12" class="mongo"/><text x="790" y="190" class="title">MongoDB</text><text x="792" y="218" class="small">operacion + outbox</text>
+  <rect x="970" y="305" width="130" height="100" rx="12" class="cass"/><text x="983" y="348" class="title">Cassandra</text><text x="989" y="375" class="small">RF=1</text>
+  <path d="M180 240H270M430 240H500M680 240H760" class="flow"/><text x="692" y="220" class="small">operacion</text>
+  <path d="M845 245V355H970" class="async"/><text x="800" y="325" class="small">outbox / proyeccion</text>
+</svg>

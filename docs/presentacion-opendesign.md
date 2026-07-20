@@ -1,358 +1,351 @@
-# Presentación OpenDesign: plataforma políglota de pedidos
+# Presentacion OpenDesign: La Brasa | Base de Datos 2
 
-## Instrucciones para OpenDesign
+## Instrucciones de renderizado
 
-Crear una presentación académica de **7 diapositivas**, formato **16:9**, para una exposición de **6 a 7 minutos**. Debe acompañar una demostración en vivo del sistema, no reemplazarla.
+Crear una presentacion academica de **10 diapositivas**, formato **16:9**, para una exposicion de **6 minutos 45 segundos** sobre el dominio `https://restaurante.cloud.groowtech.com`.
 
-### Regla de renderizado
+- Renderizar solo las secciones `Diapositiva 1` a `Diapositiva 10`.
+- Mostrar unicamente `Texto visible` y el recurso definido en `Visual`.
+- Enviar `Notas del presentador` y `Transicion` a las notas; nunca mostrarlas en pantalla.
+- Usar las capturas reales indicadas. Si una captura no esta lista, usar un marco identificado y reemplazarlo antes del ensayo final; no inventar pantallas.
+- Mantener el pie `La Brasa | Base de Datos 2 | Grupo 1`, numero de diapositiva y dominio discreto.
 
-- Renderizar únicamente las siete secciones tituladas `Diapositiva`.
-- Dentro de cada diapositiva, mostrar solo `Texto visible` y construir el recurso indicado en `Visual`.
-- Enviar `Guion del expositor`, `Guion y acciones` y `Transición` a las notas del presentador; nunca mostrarlos en pantalla.
-- No renderizar las secciones posteriores a `Material de apoyo para el equipo`.
+## Direccion visual
 
-### Dirección visual
+- Estilo: editorial tecnico, sobrio y universitario. Priorizar diagramas de datos, claves y flujos antes que pantallas de programacion.
+- Paleta: carbon `#1E1D1A`, crema `#F7EFDF`, brasa `#C94A2F`, azafran `#D89B2B` y verde hierba `#4F6B45`.
+- Tipografia: una sans legible para titulos y cuerpo; monoespaciada solo para colecciones, tablas, claves y consultas.
+- Usar espacio en blanco, lineas finas y un maximo de cuatro ideas visibles por diapositiva.
+- Diferenciar con linea continua la escritura operacional y con linea punteada la proyeccion eventual.
+- Evitar fotos de stock, iconos decorativos, fondos con degradado, bloques extensos de codigo y logotipos de tecnologias como elemento principal.
 
-- Estilo: técnico, universitario, limpio y seguro.
-- Paleta: azul oscuro `#17365D`, azul claro `#EAF0F6`, blanco y un acento naranja moderado.
-- Tipografía: Inter, IBM Plex Sans o equivalente; usar una fuente monoespaciada solo para nombres técnicos.
-- Usar diagramas simples, capturas reales del sistema y poco texto.
-- Máximo cuatro ideas visibles por diapositiva.
-- Mantener el mismo encabezado, numeración y pie: `Grupo 1 | Base de Datos 2`.
-- No colocar párrafos del guion en las diapositivas: el guion pertenece a las notas del presentador.
-- Evitar imágenes decorativas genéricas, fondos con degradados y bloques extensos de código.
-
-### Mensaje central
+## Mensaje central
 
 > Una compra, dos modelos de datos y una sola fuente de verdad.
 
-### Distribución del tiempo
+## Cronograma
 
-| Tiempo | Diapositiva | Responsable |
-|---|---|---|
-| 0:00--0:30 | 1. Apertura | Amir |
-| 0:30--1:10 | 2. Problema y solución | Adriano |
-| 1:10--1:55 | 3. Arquitectura | José |
-| 1:55--2:40 | 4. MongoDB operacional | Rodrigo |
-| 2:40--3:25 | 5. Cassandra y sincronización | Fabricio |
-| 3:25--5:15 | 6. Demostración en vivo | Alex + equipo |
-| 5:15--5:55 | 7. Evidencia y cierre | Amir |
-
-El tiempo restante hasta 6:20 se reserva para cambios de expositor y latencia de la demostración. El límite absoluto es 7:00.
+| Tiempo | Diapositivas | Responsable |
+|---|---:|---|
+| 0:00-0:55 | 1-2 | Amir Alviery Cardenas Chancan |
+| 0:55-1:35 | 3 | Fabricio Sebastian Gomez Ore |
+| 1:35-3:05 | 4-5 | Alex Esteefano Apolinarez Salvatierra |
+| 3:05-3:55 | 6 | Rodrigo Raul Povis Zavala |
+| 3:55-5:25 | 7-8 | Adriano Joao Souza Reyna |
+| 5:25-6:15 | 9 | Jose Mauricio Terrazos Espinal |
+| 6:15-6:45 | 10 | Amir Alviery Cardenas Chancan |
 
 ---
 
-## Diapositiva 1: Una compra, dos modelos de datos
+## Diapositiva 1: La Brasa y la pregunta de datos
 
-**Responsable:** Cardenas Chancan, Amir Alviery  
-**Duración:** 30 segundos
+**Responsable:** Amir Alviery Cardenas Chancan | **Tiempo:** 25 segundos
 
 ### Texto visible
 
-**Plataforma políglota para la gestión de pedidos de un restaurante**
+**La Brasa: pedidos de restaurante con persistencia poliglota**
 
-MongoDB + Cassandra + NestJS + React
+`https://restaurante.cloud.groowtech.com`
 
-**Grupo 1**
+**Una compra, dos modelos de datos y una sola fuente de verdad.**
 
 ### Visual
 
-Composición central con `pedido -> MongoDB` como flujo principal y una segunda línea discontinua `outbox -> Cassandra`. No mostrar una escritura simultánea o una bifurcación directa hacia las dos bases de datos.
+Una composicion minimalista: un ticket de pedido en el centro, una flecha continua hacia `MongoDB` y, debajo, una flecha punteada posterior hacia `Cassandra`. Etiquetar la primera como `operacion` y la segunda como `proyeccion`. No dibujar una escritura simultanea del cliente hacia ambas bases.
 
-### Guion del expositor
+### Notas del presentador
 
-> Buenos días. Somos el Grupo 1 y presentamos una plataforma de pedidos para restaurante construida con persistencia políglota. El objetivo no fue usar dos bases de datos por usar más tecnología, sino asignar a cada una una responsabilidad concreta: MongoDB conserva la operación y Cassandra responde consultas temporales derivadas. En los próximos minutos mostraremos la decisión técnica y el sistema funcionando.
+> Buenos dias. Presentamos La Brasa, una plataforma de pedidos cuyo objetivo academico es justificar dos modelos de datos con responsabilidades distintas. La idea central es simple: una compra se confirma en un unico origen operacional y luego se representa en una vista de consultas. Mostraremos el modelo, el flujo y consultas reales sobre ambas bases.
 
-### Transición
+### Transicion
 
-> Primero, Adriano explicará qué problema resolvemos y qué puede hacer el usuario.
+> Antes de ver los componentes, definimos que significa una sola fuente de verdad.
 
 ---
 
-## Diapositiva 2: El problema no era solo guardar pedidos
+## Diapositiva 2: Una compra no se escribe dos veces
 
-**Responsable:** Souza Reyna, Adriano Joao  
-**Duración:** 40 segundos
+**Responsable:** Amir Alviery Cardenas Chancan | **Tiempo:** 30 segundos
 
 ### Texto visible
 
-- El cliente consulta el catálogo y registra su pedido.
-- El servidor calcula precios y totales.
-- El operador controla estados y despacho.
-- La actividad debe recuperarse incluso después de fallos.
-
-**Flujo:** `Catálogo -> Pedido -> Preparación -> Despacho -> Entrega`
+- La operacion se confirma en MongoDB.
+- Cassandra recibe una representacion derivada.
+- Si la proyeccion se demora, el pedido sigue confirmado.
+- Las consultas determinan el modelo de cada base.
 
 ### Visual
 
-Mostrar un recorrido horizontal con cinco pasos e iconos simples. Resaltar con un candado que el total se calcula en el servidor.
+Dos columnas. En `MongoDB`, resaltar `estado operativo`, `transaccion` y `recuperacion`. En `Cassandra`, resaltar `lecturas previstas` y `consistencia eventual`. Entre ambas, un bloque `outbox` dentro de MongoDB y una flecha punteada que sale despues de confirmar la operacion.
 
-### Guion del expositor
+### Notas del presentador
 
-> Un pedido parece una operación CRUD sencilla, pero tiene reglas importantes. El cliente no puede decidir el precio ni el total; esos valores se reconstruyen con el catálogo activo. Además, un pedido solo puede avanzar por estados válidos y los reintentos no deben duplicarlo. El operador necesita observar el despacho y recuperar la actividad si Cassandra estuvo temporalmente fuera de servicio. Esas necesidades guiaron toda la arquitectura.
+> No usamos dos bases para guardar la misma verdad con dos escrituras independientes. MongoDB conserva el catalogo, el pedido y el evento pendiente dentro de la operacion principal. Cassandra no decide precios, estados ni existencia de pedidos: ofrece lecturas derivadas que pueden tardar brevemente en reflejar una actualizacion. Esa separacion evita que una falla de la proyeccion invalide una compra ya confirmada.
 
-### Transición
+### Transicion
 
-> Con esas reglas claras, José mostrará cómo se distribuyen las responsabilidades.
+> Fabricio ubicara este flujo dentro de los contenedores y limites del sistema.
 
 ---
 
-## Diapositiva 3: Arquitectura acotada y reproducible
+## Diapositiva 3: Arquitectura acotada: cuatro contenedores
 
-**Responsable:** Terrazos Espinal, José Mauricio  
-**Duración:** 45 segundos
+**Responsable:** Fabricio Sebastian Gomez Ore | **Tiempo:** 40 segundos
 
 ### Texto visible
 
 ```text
-Cliente -> React/Nginx -> API NestJS -> MongoDB
-                                      |
-                                   outbox
-                                      v
-                    trabajador embebido -> Cassandra
+Navegador -> Web -> API -> MongoDB
+                         | outbox
+                         v
+                       Worker -> Cassandra
 ```
 
-- Exactamente cuatro contenedores.
-- MongoDB es la fuente de verdad.
-- El trabajador está embebido en la API.
-- Cassandra contiene solo dos proyecciones.
+- Web, API, MongoDB y Cassandra.
+- El worker se ejecuta dentro de la API.
+- Las bases no estan expuestas publicamente.
+- Cassandra: nodo unico, `RF=1`.
 
 ### Visual
 
-Redibujar el flujo como cuatro bloques: Web, API + trabajador, MongoDB y Cassandra. Mostrar explícitamente `MongoDB outbox -> trabajador embebido -> Cassandra`; usar línea continua para la operación y línea discontinua para la proyección asíncrona.
+Diagrama de cuatro bloques, con el navegador fuera del limite de la aplicacion. La flecha de la operacion llega primero a MongoDB. Desde `outbox`, una flecha punteada pasa al worker embebido y luego a Cassandra. Marcar `nodo unico / RF=1` junto a Cassandra como limite de alcance, no como ventaja.
 
-### Guion del expositor
+### Notas del presentador
 
-> La solución ejecuta cuatro contenedores: web, API, MongoDB y Cassandra. La interfaz solo se comunica con NestJS. Todas las decisiones de negocio se confirman primero en MongoDB, nuestra única fuente de verdad. La misma API incorpora un trabajador que lee eventos pendientes y actualiza Cassandra. No añadimos Kafka ni un quinto servicio porque el alcance académico prioriza demostrar correctamente las bases de datos y mantener un entorno local reproducible.
+> El entorno se limita deliberadamente a cuatro contenedores: web, API, MongoDB y Cassandra. El worker vive en la API y procesa eventos del outbox; por eso no existe un servicio adicional entre las dos bases. Las bases quedan en la red interna. Cassandra corre como nodo unico con factor de replicacion uno. Por honestidad tecnica, esto demuestra modelado y proyeccion, no alta disponibilidad.
 
-### Transición
+**Responsabilidad de exposicion:** Fabricio debe validar este diagrama contra el entorno activo, documentar los cuatro contenedores y ejecutar su explicacion con el flujo visible.
 
-> Rodrigo explicará ahora cómo MongoDB protege la operación principal.
+### Transicion
+
+> Alex explicara ahora por que la operacion inicia y termina en MongoDB.
 
 ---
 
-## Diapositiva 4: MongoDB protege la operación
+## Diapositiva 4: MongoDB: fuente operacional
 
-**Responsable:** Povis Zavala, Rodrigo Raul  
-**Duración:** 45 segundos
+**Responsable:** Alex Esteefano Apolinarez Salvatierra | **Tiempo:** 45 segundos
 
 ### Texto visible
 
-- MongoDB es la fuente operacional de verdad.
-- `order + outbox` se confirman en una transacción.
-- Validación e índices protegen la integridad.
-- `Idempotency-Key` evita pedidos duplicados.
+| Coleccion | Responsabilidad |
+|---|---|
+| `catalog_items` | productos activos y precio vigente |
+| `orders` | pedido, instantanea, total y estado |
+| `outbox` | evento pendiente de proyectar |
+
+**MongoDB es la fuente operacional de verdad.**
 
 ### Visual
 
-Tres documentos MongoDB etiquetados `catalog_items`, `orders` y `outbox`. Encerrar `orders + outbox` dentro de un borde con la etiqueta `transacción`.
+Tres documentos conectados. `catalog_items` aporta precio al documento `orders`; `orders` genera un documento en `outbox`. Resaltar que `orders` conserva una instantanea de precio y cantidad, no una referencia que recalcula el pasado.
 
-### Guion del expositor
+### Notas del presentador
 
-> MongoDB almacena tres colecciones principales. El catálogo mantiene el precio vigente; el pedido guarda una instantánea para conservar el valor histórico; y la salida, u outbox, registra el evento que después será proyectado. Los validadores e índices refuerzan la integridad dentro de la base de datos. La creación del pedido y su evento ocurre en una sola transacción. Si el cliente reintenta con la misma clave, recibe el pedido original en lugar de crear otro.
+> MongoDB concentra las decisiones que modifican el negocio. `catalog_items` aporta solo productos activos y precios vigentes; al crear el pedido, esos valores se copian como instantanea en `orders`, junto con el total calculado por el servidor. `outbox` registra el evento que debera proyectarse. Asi, la consulta de Cassandra no puede alterar ni reemplazar el estado operacional.
 
-### Transición
+**Responsabilidad de exposicion:** Alex debe analizar las tres colecciones, validar sus campos e indices en el entorno y documentar la evidencia que mostrara.
 
-> Ese evento permite actualizar Cassandra sin convertirla en una segunda fuente de verdad. Fabricio mostrará cómo.
+### Transicion
+
+> La siguiente diapositiva muestra como el pedido y su evento se vuelven inseparables.
 
 ---
 
-## Diapositiva 5: Cassandra se diseña desde las consultas
+## Diapositiva 5: Transaccion e idempotencia en MongoDB
 
-**Responsable:** Gomez Ore, Fabricio Sebastian  
-**Duración:** 45 segundos
+**Responsable:** Alex Esteefano Apolinarez Salvatierra | **Tiempo:** 45 segundos
 
 ### Texto visible
 
-**Dos consultas, dos tablas**
+```text
+validar catalogo -> calcular total
+        -> transaccion: orders + outbox
+```
 
-- `order_timeline_by_order`: historial por `order_id`.
-- `restaurant_activity_by_day`: actividad por restaurante y día.
-- Las lecturas usan la partición completa, sin `ALLOW FILTERING`.
-- `Outbox -> lease -> upsert idempotente -> processed`.
+- Indices unicos protegen claves operacionales.
+- La misma `Idempotency-Key` no crea dos pedidos.
+- Solicitud distinta con la misma clave: conflicto.
+- Un reintento equivalente devuelve el pedido existente.
 
 ### Visual
 
-Mostrar dos tarjetas de consulta y, debajo, una línea de cuatro pasos para el trabajador. Incluir la etiqueta `sin ALLOW FILTERING`.
+Un contenedor marcado `transaccion MongoDB` que encierra dos inserciones: `orders` y `outbox`. A un lado, una llave `Idempotency-Key` entra a un indice unico de `orders`; mostrar dos reintentos que convergen en el mismo `order_id`.
 
-### Guion del expositor
+### Notas del presentador
 
-> Cassandra no replica todo MongoDB. Implementa únicamente dos vistas construidas desde las consultas que necesitamos: la línea temporal de un pedido y la actividad de un restaurante por día. Las lecturas siempre incluyen la clave de partición y nunca usan ALLOW FILTERING. El trabajador reclama cada evento, escribe ambas vistas de manera idempotente y después lo marca como procesado. Si falla a mitad del proceso, puede repetir las mismas claves sin crear un evento lógico adicional.
+> En el checkout, la API valida los productos activos, calcula subtotales y total con precios del catalogo, y dentro de una misma transaccion inserta el pedido y su evento en outbox. Los indices unicos incluyen la idempotencia del pedido y el identificador del evento; tambien hay indice para recuperar pedidos por restaurante y fecha. Si llega la misma clave con el mismo contenido, se devuelve el pedido original. Si cambia el contenido, se rechaza porque esa clave ya representa otra operacion.
 
-### Transición
+### Transicion
 
-> Alex demostrará ahora este recorrido directamente en la aplicación.
+> Rodrigo comprobara en vivo esa fuente operacional con consultas MongoDB.
 
 ---
 
-## Diapositiva 6: Demostración en vivo
+## Diapositiva 6: MongoDB en vivo: evidencia operacional
 
-**Operación del sistema:** Apolinarez Salvatierra, Alex Esteefano  
-**Narración de pasos:** Adriano, Rodrigo, José y Fabricio  
-**Duración máxima:** 1 minuto 50 segundos
+**Responsable:** Rodrigo Raul Povis Zavala | **Tiempo:** 50 segundos
 
 ### Texto visible
 
-**Recorrido de demostración**
+**Demostracion MongoDB**
 
-1. Consultar el catálogo.
-2. Crear un pedido como invitado.
-3. Ingresar como operador y avanzar el estado.
-4. Consultar la línea temporal proyectada.
+1. `catalog_items`: precio activo
+2. `orders`: instantanea y estado
+3. `outbox`: evento del mismo `order_id`
+4. Indices y plan de una consulta real
 
 ### Visual
 
-Usar una captura real del catálogo como fondo principal y una barra inferior con los cuatro pasos. Al importar el Markdown, adjuntar `assets/presentacion/01-catalogo.png`, `02-pedido.png`, `03-operador.png` y `04-timeline.png`. Si todavía no existen, usar marcos vacíos etiquetados y reemplazarlos antes de presentar; no generar pantallas ficticias.
+Usar una captura real del resultado de `mongosh` o una terminal ampliada y legible, con un pedido preparado para la demo. Resaltar con color un mismo `order_id` en `orders` y `outbox`, y el indice elegido por `explain`. No mostrar secretos ni datos personales.
 
-### Guion y acciones
+### Notas del presentador
 
-#### 0. Control de la demostración, 30 segundos distribuidos
+> Ahora verificamos la evidencia directamente en MongoDB. Primero ubicamos un producto activo del catalogo. Luego mostramos el pedido: sus items ya contienen precio y subtotal historicos, total y estado. Con el mismo `order_id`, mostramos en outbox el evento pendiente o procesado. Finalmente inspeccionamos los indices y el plan de una consulta representativa. La idempotencia se explica desde su indice unico y el flujo implementado, sin crear otra compra durante la demostracion.
 
-**Habla:** Alex.  
-**Acción:** manejar la aplicación durante todo el recorrido y anunciar brevemente cada cambio de pantalla.
+**Responsabilidad de exposicion:** Rodrigo Raul debe ejecutar las consultas, validar los resultados antes de exponer y conservar capturas reales como contingencia.
 
-> Vamos a recorrer una compra completa. Ya tenemos los cuatro servicios iniciados y datos semilla preparados. Primero veremos la experiencia pública y después la operación protegida y su proyección.
+### Transicion
 
-#### 1. Catálogo, 15 segundos
-
-**Habla:** Adriano.  
-**Acción:** abrir el catálogo con datos semilla.
-
-> Como invitado podemos consultar únicamente productos activos. El precio que vemos es informativo; la API volverá a consultarlo al crear el pedido.
-
-#### 2. Pedido, 20 segundos
-
-**Habla:** Rodrigo.  
-**Acción:** seleccionar productos, indicar cantidad y confirmar.
-
-> Enviamos productos y cantidades, no un total confiable. La API valida el catálogo, calcula cada subtotal y devuelve el pedido con su identificador y estado PENDING.
-
-#### 3. Operación, 20 segundos
-
-**Habla:** José.  
-**Acción:** iniciar sesión como operador y avanzar el pedido a CONFIRMED o PREPARING.
-
-> Las operaciones administrativas requieren la sesión segura del operador. La transición valida el estado actual y registra simultáneamente el historial y un nuevo evento de salida.
-
-#### 4. Proyección, 25 segundos
-
-**Habla:** Fabricio.  
-**Acción:** abrir el estado de proyección y la línea temporal del pedido.
-
-> El trabajador procesa los eventos pendientes y Cassandra devuelve la secuencia ordenada del pedido. Esta vista es derivada: si Cassandra falla, MongoDB conserva la operación y permite reproducir los eventos.
-
-### Transición
-
-> Con el flujo completo visible, Amir cerrará con la evidencia técnica y la conclusión.
+> Con la operacion confirmada, Adriano Joao presentara las vistas que Cassandra necesita leer.
 
 ---
 
-## Diapositiva 7: Qué demuestra el proyecto
+## Diapositiva 7: Cassandra: tablas desde las consultas
 
-**Responsable:** Cardenas Chancan, Amir Alviery  
-**Duración:** 40 segundos
+**Responsable:** Adriano Joao Souza Reyna | **Tiempo:** 50 segundos
 
 ### Texto visible
 
-- **Integridad:** cálculo del servidor y transacciones MongoDB.
-- **Recuperación:** idempotencia y reproducción de eventos.
-- **Consultas:** dos vistas Cassandra orientadas a partición.
-- **Alcance:** nodo único; no afirma alta disponibilidad.
+| Pregunta | Tabla |
+|---|---|
+| Historial de un pedido | `order_timeline_by_order` |
+| Actividad de un restaurante en un dia | `restaurant_activity_by_day` |
+
+- Particiones: `order_id` y `(restaurant_id, day)`.
+- Lecturas con la particion completa.
+- Sin `ALLOW FILTERING`.
 
 ### Visual
 
-Tres columnas: Integridad, Recuperación y Alcance. Terminar con la frase central de la presentación.
+Dos tarjetas de tabla. En la primera, destacar `PRIMARY KEY ((order_id), occurred_at, event_id)` y orden ascendente. En la segunda, destacar `PRIMARY KEY ((restaurant_id, day), occurred_at, event_id)` y orden descendente. Conectar cada tarjeta a su pregunta, no a una entidad generica.
 
-### Guion del expositor
+### Notas del presentador
 
-> El proyecto demuestra que la persistencia políglota funciona cuando cada tecnología tiene un límite claro. MongoDB garantiza la integridad operacional con validadores, índices y transacciones. Cassandra responde consultas temporales previamente modeladas y puede reconstruirse desde la salida. La idempotencia permite recuperarnos de reintentos y fallos parciales. Nuestro alcance es local y de nodo único, por lo que no afirmamos alta disponibilidad. En síntesis: una compra, dos modelos de datos y una sola fuente de verdad. Gracias.
+> Cassandra no es una copia documental de MongoDB. Sus dos tablas nacen de dos preguntas concretas. `order_timeline_by_order` lee el historial de un pedido usando `order_id` como particion. `restaurant_activity_by_day` lee la actividad de un restaurante para una fecha usando la particion compuesta por restaurante y dia. Los tiempos y `event_id` ordenan y distinguen eventos. Como cada consulta incluye su particion completa, no dependemos de filtrado posterior.
 
----
+**Responsabilidad de implementacion:** Adriano Joao integro la proyeccion Cassandra. En la exposicion debe mostrar el modelo CQL, validar las claves primarias y explicar por que cada tabla responde una consulta concreta.
 
-# Material de apoyo para el equipo
+### Transicion
 
-> Todo lo que sigue corresponde a preparación y notas. OpenDesign no debe convertirlo en diapositivas.
-
-## Preparación de la demostración
-
-### Antes de entrar al aula
-
-- [ ] Ejecutar `docker compose --project-directory . -f infra/compose.yaml -f infra/compose.local.yaml up -d --build`.
-- [ ] Confirmar que los cuatro contenedores están sanos.
-- [ ] Verificar que el catálogo semilla tenga productos activos.
-- [ ] Capturar las cuatro pantallas reales en `assets/presentacion/` con los nombres indicados en la diapositiva 6.
-- [ ] Tener preparadas las credenciales del operador sin mostrarlas en pantalla.
-- [ ] Crear una clave de idempotencia nueva para la demostración.
-- [ ] Abrir previamente las pestañas de catálogo, operador, proyección y respaldo.
-- [ ] Ocultar notificaciones, terminales con secretos y datos personales.
-- [ ] Probar el recorrido completo una vez antes de presentar.
-
-### Plan de contingencia
-
-Si la demostración falla, no depurar frente al público por más de 15 segundos.
-
-1. Explicar qué paso debía observarse.
-2. Volver a la diapositiva 6.
-3. Mostrar cuatro capturas preparadas: catálogo, pedido creado, transición y línea temporal.
-4. Continuar con la conclusión sin reiniciar toda la infraestructura.
+> La siguiente parte explica como esas vistas reciben eventos sin competir con MongoDB.
 
 ---
 
-## Reparto del equipo
+## Diapositiva 8: Outbox, worker y consistencia eventual
 
-| Integrante | Parte principal | Concepto que debe dominar |
-|---|---|---|
-| Amir Alviery Cardenas Chancan | Apertura y cierre | Decisión global y límites del proyecto |
-| Adriano Joao Souza Reyna | Problema y catálogo durante la demo | Reglas de negocio y cálculo del total |
-| José Mauricio Terrazos Espinal | Arquitectura y transición durante la demo | Componentes, contenedores y flujo de datos |
-| Rodrigo Raul Povis Zavala | MongoDB y creación del pedido en la demo | Validación, índices, transacción e idempotencia |
-| Fabricio Sebastian Gomez Ore | Cassandra y proyección durante la demo | Particiones, proyecciones, outbox y recuperación |
-| Alex Esteefano Apolinarez Salvatierra | Operación completa de la demostración | Recorrido completo y manejo de la interfaz |
+**Responsable:** Adriano Joao Souza Reyna | **Tiempo:** 40 segundos
 
----
+### Texto visible
 
-## Preguntas probables y respuestas breves
+```text
+outbox PENDING -> lease -> upserts Cassandra -> PROCESSED
+                         \-> error: reintento
+```
 
-### ¿Por qué usar dos bases de datos?
+- Primero se confirma MongoDB; despues se proyecta.
+- Los upserts usan claves estables e idempotencia.
+- Una falla deja el evento recuperable.
+- La lectura puede tener demora temporal.
 
-MongoDB resuelve el estado operacional y las transacciones; Cassandra resuelve dos consultas temporales derivadas. No se duplican responsabilidades.
+### Visual
 
-### ¿Cuál es la fuente de verdad?
+Linea de estados en cuatro pasos: `PENDING`, `PROCESSING` con etiqueta `lease`, dos escrituras Cassandra y `PROCESSED`. Agregar una rama de error que vuelve a `PENDING`. Colocar `consistencia eventual` sobre la flecha punteada hacia Cassandra.
 
-MongoDB. Cassandra puede eliminarse y reconstruirse desde los eventos conservados en la salida.
+### Notas del presentador
 
-### ¿Cómo evitan pedidos duplicados?
+> El worker reclama un evento pendiente con una lease temporal. Escribe el mismo evento en ambas tablas de Cassandra mediante upserts idempotentes y solo despues lo marca como procesado en el outbox. Si Cassandra falla o el worker se interrumpe, el evento vuelve a estar disponible para reintento. Por eso una confirmacion puede aparecer primero en MongoDB y unos segundos despues en Cassandra: es consistencia eventual, no perdida de la compra.
 
-La API exige una clave de idempotencia única y compara la huella de la solicitud. Un reintento equivalente devuelve el pedido original.
+**Responsabilidad de implementacion:** Adriano Joao debe demostrar la integracion del worker y explicar el estado del outbox con evidencia del entorno activo.
 
-### ¿Cómo evitan eventos duplicados en Cassandra?
+### Transicion
 
-El mismo `event_id`, junto con la partición y el tiempo del evento, forma una clave estable. Una repetición actualiza la misma fila lógica.
-
-### ¿Por qué no utilizar Kafka?
-
-El alcance exige cuatro contenedores y prioriza evidencia de bases de datos. Un trabajador embebido es suficiente para el volumen académico y evita un servicio adicional.
-
-### ¿Qué ocurre si Cassandra se detiene?
-
-MongoDB sigue aceptando la operación y acumula eventos pendientes. Cuando Cassandra vuelve, el trabajador reintenta o reproduce hasta que ambas vistas convergen.
-
-### ¿Cassandra ofrece alta disponibilidad en este proyecto?
-
-No. Se usa un nodo con factor de replicación uno. El proyecto demuestra modelado orientado a consultas y recuperación, no alta disponibilidad productiva.
-
-### ¿Cómo protegen los totales?
-
-El cliente solo envía artículos y cantidades. La API consulta precios activos, calcula subtotales y almacena una instantánea del pedido.
+> Jose Mauricio ejecutara las dos consultas Cassandra que justifican este modelo.
 
 ---
 
-## Reglas para ensayar
+## Diapositiva 9: Cassandra en vivo: dos lecturas permitidas
 
-- Cada integrante debe mantenerse dentro de su tiempo; el objetivo ensayado es 6 minutos 20 segundos incluyendo transiciones.
-- No leer las diapositivas: explicar una decisión y señalar el visual correspondiente.
-- No repetir la introducción al cambiar de expositor.
-- Usar las transiciones escritas para que la presentación parezca una sola historia.
-- Alex debe ensayar la demo con otro integrante controlando el tiempo.
-- Amir debe cortar detalles adicionales y reservarlos para preguntas.
-- Realizar dos ensayos completos: uno normal y otro usando el plan de contingencia.
+**Responsable:** Jose Mauricio Terrazos Espinal | **Tiempo:** 50 segundos
+
+### Texto visible
+
+```sql
+WHERE order_id = ?
+WHERE restaurant_id = ? AND day = ?
+```
+
+- Timeline ordenado por pedido.
+- Actividad diaria ordenada por evento.
+- Mismo `event_id`, misma fila logica.
+- Ninguna consulta usa `ALLOW FILTERING`.
+
+### Visual
+
+Dos capturas reales de `cqlsh` o del tablero de proyecciones: una timeline y una actividad diaria. En ambas, resaltar la clave de particion y un `event_id` que tambien aparezca en la evidencia MongoDB. No usar datos inventados.
+
+### Notas del presentador
+
+> Ejecutamos dos consultas y ambas especifican la particion completa. La primera recupera el historial ordenado del pedido mostrado antes. La segunda recupera actividad para un restaurante y una fecha. El `event_id` estable permite repetir un evento sin crear otra fila logica. No consultamos Cassandra como si fuera una tabla relacional general: las tablas y las claves existen para estas lecturas definidas.
+
+**Responsabilidad de exposicion:** Jose Mauricio debe ejecutar ambas consultas en vivo, comprobar que usan los parametros preparados y mantener capturas reales para el plan de contingencia.
+
+### Transicion
+
+> Amir cerrara con lo que el proyecto demuestra y con sus limites reales.
+
+---
+
+## Diapositiva 10: La decision y sus limites
+
+**Responsable:** Amir Alviery Cardenas Chancan | **Tiempo:** 30 segundos
+
+### Texto visible
+
+**MongoDB**
+Operacion, transaccion, indices, idempotencia
+
+**Cassandra**
+Consultas predefinidas, proyecciones, consistencia eventual
+
+**Una compra, dos modelos de datos y una sola fuente de verdad.**
+
+`Nodo unico | RF=1 | Sin afirmacion de alta disponibilidad`
+
+### Visual
+
+Volver al ticket de la primera diapositiva. Mostrar MongoDB como bloque principal y Cassandra como vista derivada. Cerrar con la frase central en tipografia grande y el limite `nodo unico / RF=1` claramente separado como alcance academico.
+
+### Notas del presentador
+
+> La decision no fue duplicar una compra, sino asignar responsabilidades. MongoDB mantiene la verdad operacional: catalogo, pedidos, transacciones, indices e idempotencia. Cassandra resuelve dos lecturas conocidas mediante proyecciones que pueden reconstruirse desde el outbox. El alcance es un nodo Cassandra con factor de replicacion uno; no afirmamos alta disponibilidad. Con esto cerramos: una compra, dos modelos de datos y una sola fuente de verdad. Gracias.
+
+---
+
+# Apoyo de preparacion
+
+> Esta seccion no se renderiza como diapositiva.
+
+## Capturas reales requeridas
+
+- MongoDB: `catalog_items`, un `orders` y su `outbox` con el mismo `order_id`.
+- MongoDB: indices y plan de una consulta representativa, sin datos personales.
+- Cassandra: resultado de timeline por pedido y actividad por restaurante y fecha.
+- Aplicacion: tablero de proyeccion con estado de pendientes/procesados, si se usa como apoyo visual.
+
+## Plan de contingencia
+
+1. Si una consulta en vivo no responde en 15 segundos, mostrar su captura real preparada.
+2. Decir con precision que la captura corresponde al mismo escenario preparado, sin afirmar que es una ejecucion en vivo.
+3. Continuar con el siguiente responsable; no reiniciar infraestructura durante la exposicion.
+4. Mantener visibles solo datos semilla o anonimizados y nunca credenciales, secretos ni terminales no preparadas.
